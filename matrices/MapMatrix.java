@@ -16,9 +16,6 @@ public class MapMatrix extends Matrix {
     // calculate complete rows first
     private static final boolean WRITE_BY_ROW = true;
 
-    // this parameter does not seem to influence calculation speed
-    private static final boolean PRL_COMPUTE_COLUMNS = false;
-
     private static final int DEFAULT_VALUE = 0;
     private static final int NUMBER_OF_THREADS = 8;
 
@@ -130,8 +127,7 @@ public class MapMatrix extends Matrix {
             matrices[i] = result;
         }
 
-        prlMultThisWithInto(matrix, matrices, NUMBER_OF_THREADS,
-                PRL_COMPUTE_COLUMNS);
+        prlMultThisWithInto(matrix, matrices, NUMBER_OF_THREADS, WRITE_BY_ROW);
 
         return result;
     }
@@ -261,6 +257,11 @@ public class MapMatrix extends Matrix {
     @Override
     public void strassenMultThisWithInto(Matrix matrix, Matrix result) {
         strassenMultThisWithInto(matrix, result, WRITE_BY_ROW);
+    }
+
+    @Override
+    public void prlStrassenMultThisWithInto(Matrix matrix, Matrix result) {
+        prlStrassenMultThisWithInto(matrix, result, WRITE_BY_ROW);
     }
 
     @Override

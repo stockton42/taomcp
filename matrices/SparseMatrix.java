@@ -28,11 +28,8 @@ public class SparseMatrix extends Matrix {
     private static final int DEFAULT_VALUE = 0;
     private static final int NUMBER_OF_THREADS = 8;
 
-    // write columns first in multiplication
+    // write complete columns first in multiplication
     private static final boolean WRITE_BY_ROW = false;
-
-    // write columns in parallel naive multiplication
-    private static final boolean PRL_COMPUTE_COLUMNS = true;
 
     // increases speed when the matrix is not too sparse
     private static final boolean BINARY_ACCESS = true;
@@ -383,8 +380,7 @@ public class SparseMatrix extends Matrix {
                     this.getRows() + matrix.getCols());
         }
 
-        prlMultThisWithInto(matrix, matrices, NUMBER_OF_THREADS,
-                PRL_COMPUTE_COLUMNS);
+        prlMultThisWithInto(matrix, matrices, NUMBER_OF_THREADS, WRITE_BY_ROW);
 
         SparseMatrix result = new SparseMatrix(matrices);
 
@@ -561,6 +557,11 @@ public class SparseMatrix extends Matrix {
     @Override
     public void strassenMultThisWithInto(Matrix matrix, Matrix result) {
         strassenMultThisWithInto(matrix, result, WRITE_BY_ROW);
+    }
+
+    @Override
+    public void prlStrassenMultThisWithInto(Matrix matrix, Matrix result) {
+        prlStrassenMultThisWithInto(matrix, result, WRITE_BY_ROW);
     }
 
     @Override

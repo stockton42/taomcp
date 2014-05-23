@@ -4,12 +4,8 @@ import java.util.Arrays;
 
 public class ArrayMatrix extends Matrix {
 
-    // calculate complete rows first
+    // calculate complete rows first, increases speed by 100 %
     private static final boolean WRITE_BY_ROW = true;
-
-    // process rows in parallel calculation: false is TWO TIMES FASTER then
-    // true!
-    private static final boolean PRL_COMPUTE_COLUMNS = false;
 
     private static final int DEFAULT_VALUE = 0;
     private static final int NUMBER_OF_THREADS = 8;
@@ -114,8 +110,7 @@ public class ArrayMatrix extends Matrix {
             matrices[i] = result;
         }
 
-        prlMultThisWithInto(matrix, matrices, NUMBER_OF_THREADS,
-                PRL_COMPUTE_COLUMNS);
+        prlMultThisWithInto(matrix, matrices, NUMBER_OF_THREADS, WRITE_BY_ROW);
 
         return result;
     }
@@ -224,6 +219,11 @@ public class ArrayMatrix extends Matrix {
     @Override
     public void strassenMultThisWithInto(Matrix matrix, Matrix result) {
         strassenMultThisWithInto(matrix, result, WRITE_BY_ROW);
+    }
+
+    @Override
+    public void prlStrassenMultThisWithInto(Matrix matrix, Matrix result) {
+        prlStrassenMultThisWithInto(matrix, result, WRITE_BY_ROW);
     }
 
     @Override

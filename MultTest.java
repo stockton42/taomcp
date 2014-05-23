@@ -51,15 +51,6 @@ public class MultTest {
         System.out.println("---\nCALCULATION TIME COMPARISON\n---\n");
 
         for (int multType : multTypesToCalculate) {
-
-            // double[][] arr1 = { { 0, 1, 2, 3 }, { 1, 2, 3, 4 }, { 2, 3, 4, 5
-            // },
-            // { 3, 4, 5, 6 } };
-            // double[][] arr2 = { { 0, 3, 6, 9 }, { 2, 5, 8, 11 }, { 4, 7, 10,
-            // 13
-            // },
-            // { 6, 9, 12, 15 } };
-
             System.out.println(multTypeIds.get(multType)
                     + " MATRIX MULTIPLICATION\n---");
 
@@ -88,6 +79,8 @@ public class MultTest {
                         mat1.winogradMultThisWithInto(mat2, result);
                     } else if (multType == 3) {
                         mat1.strassenMultThisWithInto(mat2, result);
+                    } else if (multType == 4) {
+                        mat1.prlStrassenMultThisWithInto(mat2, result);
                     }
                 }
                 time = System.currentTimeMillis() - time;
@@ -111,8 +104,10 @@ public class MultTest {
             Set<Integer> matrixStorageTypesToCalculate) {
         multTypesToCalculate.add(0);
         multTypesToCalculate.add(1);
-        multTypesToCalculate.add(2);
+        // multTypesToCalculate.add(2);
         multTypesToCalculate.add(3);
+        multTypesToCalculate.add(4);
+        // matrixStorageTypesToCalculate.add(0);
         matrixStorageTypesToCalculate.add(1);
         matrixStorageTypesToCalculate.add(2);
     }
@@ -123,6 +118,7 @@ public class MultTest {
         multTypeIds.put(1, "PARALLEL-NAIVE");
         multTypeIds.put(2, "WINOGRAD");
         multTypeIds.put(3, "STRASSEN-NAIVE HYBRID");
+        multTypeIds.put(4, "PARALLEL-STRASSEN-NAIVE HYBRID");
         matrixStorageTypeIds.put(0, "MAP");
         matrixStorageTypeIds.put(1, "ARRAY");
         matrixStorageTypeIds.put(2, "SPARSE");
