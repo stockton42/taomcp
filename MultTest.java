@@ -38,7 +38,7 @@ public class MultTest {
         int runs = 1;
         int randomNumbers1 = 100;
         int randomNumbers2 = 100;
-        int exponent = 1000;
+        int exponent = 10000;
 
         // set up the dimensions of the matrices
         int rows1 = 100;
@@ -140,7 +140,7 @@ public class MultTest {
         System.out.println("RIGHT IS NOT NEGATIVE:\t " + arrM2.isNonNegative());
         System.out.println("\nONLY ALLOW NONNEGATIVE MATRICES:\t "
                 + setNegativeEntriesToZero);
-        System.out.println("USE LAST MATRIX POWER ALGORITHM:\t " + useLogPower);
+        System.out.println("USE FAST MATRIX POWER ALGORITHM:\t " + useLogPower);
         System.out.println("\n---\nCALCULATION TIME COMPARISON");
         if (mode) {
             System.out.println("CALCULATING LEFT ^ " + exponent + " ...");
@@ -153,10 +153,10 @@ public class MultTest {
     private static void setUpExperiment(
             List<MatrixMultType> multTypesToCalculate,
             Set<Integer> matrixStorageTypesToCalculate) {
-        // multTypesToCalculate.add(MatrixMultType.NAIVE);
+        multTypesToCalculate.add(MatrixMultType.NAIVE);
         multTypesToCalculate.add(MatrixMultType.PARALLEL_NAIVE);
-        // multTypesToCalculate.add(MatrixMultType.WINOGRAD);
-        // multTypesToCalculate.add(MatrixMultType.STRASSEN_NAIVE_HYBRID);
+        multTypesToCalculate.add(MatrixMultType.WINOGRAD);
+        multTypesToCalculate.add(MatrixMultType.STRASSEN_NAIVE_HYBRID);
         multTypesToCalculate.add(MatrixMultType.PARALLEL_STRASSEN_NAIVE_HYBRID);
         // matrixStorageTypesToCalculate.add(0); // MAP
         matrixStorageTypesToCalculate.add(1); // ARRAY
