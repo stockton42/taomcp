@@ -313,7 +313,7 @@ public class ArrayMatrix extends Matrix {
     }
 
     @Override
-    public boolean isNotNegative() {
+    public boolean isNonNegative() {
         for (int row = 0; row < getRows(); ++row) {
             for (int col = 0; col < getCols(); ++col) {
                 if (content[row][col] < 0) {
@@ -323,5 +323,20 @@ public class ArrayMatrix extends Matrix {
         }
 
         return true;
+    }
+
+    @Override
+    protected void setNegativeEntriesToZero(boolean showModifications) {
+        for (int row = 0; row < getRows(); ++row) {
+            for (int col = 0; col < getCols(); ++col) {
+                if (content[row][col] < 0) {
+                    if (showModifications) {
+                        System.out.println("NEGATIVE ENTRY SET TO ZERO: "
+                                + content[row][col]);
+                    }
+                    content[row][col] = DEFAULT_VALUE;
+                }
+            }
+        }
     }
 }

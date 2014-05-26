@@ -647,7 +647,7 @@ public class SparseMatrix extends Matrix {
     }
 
     @Override
-    public boolean isNotNegative() {
+    public boolean isNonNegative() {
         for (int index = 0; index < nextValIndex; ++index) {
             if (val[index] < 0) {
                 return false;
@@ -655,5 +655,18 @@ public class SparseMatrix extends Matrix {
         }
 
         return true;
+    }
+
+    @Override
+    protected void setNegativeEntriesToZero(boolean showModifications) {
+        for (int index = 0; index < nextValIndex; ++index) {
+            if (val[index] < 0) {
+                if (showModifications) {
+                    System.out.println("NEGATIVE ENTRY SET TO ZERO: "
+                            + val[index]);
+                }
+                val[index] = DEFAULT_VALUE;
+            }
+        }
     }
 }

@@ -358,7 +358,7 @@ public class MapMatrix extends Matrix {
     }
 
     @Override
-    public boolean isNotNegative() {
+    public boolean isNonNegative() {
         for (int row = 0; row < getRows(); ++row) {
             Map<Integer, Double> colMap = content.get(row);
             for (int col = 0; col < getCols(); ++col) {
@@ -370,5 +370,25 @@ public class MapMatrix extends Matrix {
         }
 
         return true;
+    }
+
+    @Override
+    protected void setNegativeEntriesToZero(boolean showModifications) {
+        for (int row = 0; row < getRows(); ++row) {
+            Map<Integer, Double> colMap = content.get(row);
+            for (int col = 0; col < getCols(); ++col) {
+                if (colMap.containsKey(col) && colMap.get(col) < 0) {
+                    if (showModifications) {
+                        System.out.println("NEGATIVE ENTRY SET TO ZERO: "
+                                + colMap.get(col));
+                    }
+                    // if (DEFAULT_VALUE == 0) {
+                    colMap.remove(col);
+                    // } else {
+                    // colMap.put(col, 0.0);
+                    // }
+                }
+            }
+        }
     }
 }

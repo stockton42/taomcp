@@ -27,6 +27,8 @@ public abstract class Matrix {
      */
     private static final int STRASSEN_PARALLEL_LEVEL_LIMIT = 1;
 
+    private static final boolean SHOW_MODIFICATIONS = true;
+
     public abstract Matrix clone();
 
     public boolean multPossible(Matrix matrix) {
@@ -52,24 +54,18 @@ public abstract class Matrix {
     public abstract Matrix getNewInstance(int rows, int cols);
 
     /**
-     * Checks if this matrix is not negative.
+     * Checks if this matrix is nonnegative.
      * 
-     * @return is true if every entry of this matrix is greater or equal to
+     * @return is true if every entry of this matrix is greater than or equal to
      *         zero.
      */
-    public abstract boolean isNotNegative();
+    public abstract boolean isNonNegative();
 
-    public void setNegativeEntriesToZero() { // TODO NEW
-        for (int row = 0; row < getRows(); ++row) {
-            for (int col = 0; col < getCols(); ++col) {
-                if (this.get(row, col) < 0) {
-                    System.out.println("NEGATIVE ENTRY SET TO ZERO: "
-                            + this.get(row, col));
-                    this.put(0.0, row, col);
-                }
-            }
-        }
+    public void setNegativeEntriesToZero() {
+        setNegativeEntriesToZero(SHOW_MODIFICATIONS);
     }
+
+    protected abstract void setNegativeEntriesToZero(boolean showModifications);
 
     public abstract void add(Matrix mat);
 

@@ -35,16 +35,17 @@ public class MultTest {
         int runs = 1;
         int randomNumbers1 = 100;
         int randomNumbers2 = 100;
-        long time;
+        int exponent = 1000;
 
+        // set up the dimensions of the matrices
         int rows1 = 100;
         int cols1 = 100;
-
         int rows2 = cols1;
         int cols2 = 100;
 
-        int exponent = 1000;
+        // set up conditions for stochastic matrices
         double rowSum = 1;
+        boolean setNeagtiveEntriesToZero = true;
 
         printExperimentParameters(runs, randomNumbers1, randomNumbers2, rows1,
                 cols1, rows2, cols2, rowSum);
@@ -54,23 +55,16 @@ public class MultTest {
         ArrayMatrix arrM1 = new ArrayMatrix(rows1, cols1);
         SparseMatrix sprM1 = new SparseMatrix(rows1, cols1, 10);
         fillMatrices(randomNumbers1, rows1, cols1, mapM1, arrM1, sprM1);
-        System.out.println("LEFT IS NOT NEGATIVE:\t " + arrM1.isNotNegative());
 
         // set up right matrix
         MapMatrix mapM2 = new MapMatrix(rows2, cols2);
         ArrayMatrix arrM2 = new ArrayMatrix(new double[rows2][cols2], false);
         SparseMatrix sprM2 = new SparseMatrix(rows2, cols2, 10);
         fillMatrices(randomNumbers2, rows2, cols2, mapM2, arrM2, sprM2);
-        System.out.println("RIGHT IS NOT NEGATIVE:\t " + arrM1.isNotNegative());
 
-        System.out.println("\n---\nCALCULATION TIME COMPARISON");
-        if (mode) {
-            System.out.println("CALCULATING LEFT ^ " + exponent + " ...");
-        } else {
-            System.out.println("CALCULATING LEFT * RIGHT MATRIX ...");
-        }
-        System.out.println("---\n");
+        printExperimentInformation(mode, exponent, arrM1, arrM2);
 
+        long time;
         for (MatrixMultType multType : multTypesToCalculate) {
             System.out.println(multType + " MATRIX MULTIPLICATION\n---");
             Matrix result = null, mat1, mat2;
@@ -94,10 +88,10 @@ public class MultTest {
                     if (mode) {
                         if (useLogPower) {
                             result = MatrixPowerer.logPower(mat1, multType,
-                                    exponent, rowSum);
+                                    exponent, rowSum, setNeagtiveEntriesToZero);
                         } else {
                             result = MatrixPowerer.stdPower(mat1, multType,
-                                    exponent, rowSum);
+                                    exponent, rowSum, setNeagtiveEntriesToZero);
                         }
                     } else {
                         result = mat1.multWith(mat2, multType);
@@ -109,7 +103,7 @@ public class MultTest {
                 // non-negative
                 System.out.println(matrixStorageTypeIds.get(matrixStorageType)
                         + "_MATRIX_TIME:\t " + time
-                        + " ms\t IS NOT NEGATIVE:\t " + result.isNotNegative());
+                        + " ms\t IS NOT NEGATIVE:\t " + result.isNonNegative());
                 if (printResultMatrix) {
                     System.out.println(result);
                 }
@@ -131,6 +125,19 @@ public class MultTest {
         }
     }
 
+    private static void printExperimentInformation(boolean mode, int exponent,
+            ArrayMatrix arrM1, ArrayMatrix arrM2) {
+        System.out.println("LEFT IS NOT NEGATIVE:\t " + arrM1.isNonNegative());
+        System.out.println("RIGHT IS NOT NEGATIVE:\t " + arrM2.isNonNegative());
+        System.out.println("\n---\nCALCULATION TIME COMPARISON");
+        if (mode) {
+            System.out.println("CALCULATING LEFT ^ " + exponent + " ...");
+        } else {
+            System.out.println("CALCULATING LEFT * RIGHT MATRIX ...");
+        }
+        System.out.println("---\n");
+    }
+
     private static void setUpExperiment(
             List<MatrixMultType> multTypesToCalculate,
             Set<Integer> matrixStorageTypesToCalculate) {
@@ -139,9 +146,9 @@ public class MultTest {
         // multTypesToCalculate.add(MatrixMultType.WINOGRAD);
         // multTypesToCalculate.add(MatrixMultType.STRASSEN_NAIVE_HYBRID);
         multTypesToCalculate.add(MatrixMultType.PARALLEL_STRASSEN_NAIVE_HYBRID);
-        // matrixStorageTypesToCalculate.add(0);
-        matrixStorageTypesToCalculate.add(1);
-        matrixStorageTypesToCalculate.add(2);
+        // matrixStorageTypesToCalculate.add(0); // MAP
+        matrixStorageTypesToCalculate.add(1); // ARRAY
+        matrixStorageTypesToCalculate.add(2); // CCS
     }
 
     private static Map<Integer, String> setUpStringMaps() {

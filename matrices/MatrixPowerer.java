@@ -21,17 +21,18 @@ public class MatrixPowerer {
 
         for (int i = 0; i < 17; ++i) {
             System.out.println("EXPONENT = " + i);
-            Matrix powered = stdPower(test, MatrixMultType.NAIVE, i, 1);
+            Matrix powered = stdPower(test, MatrixMultType.NAIVE, i, 1, true);
             System.out.println(powered);
 
             System.out.println("LOG_POWER");
-            Matrix fastPwd = logPower(test, MatrixMultType.NAIVE, i, 1);
+            Matrix fastPwd = logPower(test, MatrixMultType.NAIVE, i, 1, true);
             System.out.println(fastPwd + "\n");
         }
     }
 
     public static Matrix stdPower(Matrix mat, MatrixMultType matMultType,
-            int exponent, double stabilizeRowsTo) {
+            int exponent, double stabilizeRowsTo,
+            boolean setNeagtiveEntriesToZero) {
         if (exponent == 0) {
             Matrix result = mat.getOne();
             if (stabilizeRowsTo != NO_STABILIZE) {
@@ -47,7 +48,9 @@ public class MatrixPowerer {
 
         for (int i = 1; i < exponent; ++i) {
             qn = qn.multWith(mat, matMultType);
-            qn.setNegativeEntriesToZero(); // TODO NEW
+            if (setNeagtiveEntriesToZero) {
+                qn.setNegativeEntriesToZero();
+            }
 
             if (stabilizeRowsTo != NO_STABILIZE) {
                 qn.stabilizeRowsTo(stabilizeRowsTo);
@@ -58,7 +61,8 @@ public class MatrixPowerer {
     }
 
     public static Matrix logPower(Matrix mat, MatrixMultType matMultType,
-            int exponent, double stabilizeRowsTo) {
+            int exponent, double stabilizeRowsTo,
+            boolean setNeagtiveEntriesToZero) {
         if (exponent == 0) {
             Matrix result = mat.getOne();
             if (stabilizeRowsTo != NO_STABILIZE) {
@@ -86,7 +90,9 @@ public class MatrixPowerer {
 
         for (int i = 1; i <= maxPower; ++i) {
             temp = temp.multWith(temp, matMultType);
-            temp.setNegativeEntriesToZero(); // TODO NEW
+            if (setNeagtiveEntriesToZero) {
+                temp.setNegativeEntriesToZero();
+            }
 
             if (stabilizeRowsTo != NO_STABILIZE) {
                 temp.stabilizeRowsTo(stabilizeRowsTo);
@@ -94,7 +100,9 @@ public class MatrixPowerer {
 
             if (twoPowers.contains(i)) {
                 qn = qn.multWith(temp, matMultType);
-                qn.setNegativeEntriesToZero(); // TODO NEW
+                if (setNeagtiveEntriesToZero) {
+                    qn.setNegativeEntriesToZero();
+                }
 
                 if (stabilizeRowsTo != NO_STABILIZE) {
                     qn.stabilizeRowsTo(stabilizeRowsTo);
