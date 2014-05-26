@@ -3,6 +3,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import matrices.ArrayMatrix;
@@ -14,6 +15,8 @@ import matrices.MatrixPowerer;
 import matrices.SparseMatrix;
 
 public class MultTest {
+
+    private static final Random random = new Random();
 
     public static void main(String[] args) {
         Map<Integer, String> matrixStorageTypeIds = setUpStringMaps();
@@ -45,10 +48,14 @@ public class MultTest {
 
         // set up conditions for stochastic matrices
         double rowSum = 1;
-        boolean setNeagtiveEntriesToZero = true;
+        boolean setNegativeEntriesToZero = true;
+
+        // set random number parameters
+        long seed = 1354235;
+        random.setSeed(seed);
 
         printExperimentParameters(runs, randomNumbers1, randomNumbers2, rows1,
-                cols1, rows2, cols2, rowSum);
+                cols1, rows2, cols2, rowSum, seed);
 
         // set up left matrix
         MapMatrix mapM1 = new MapMatrix(rows1, cols1);
@@ -62,7 +69,8 @@ public class MultTest {
         SparseMatrix sprM2 = new SparseMatrix(rows2, cols2, 10);
         fillMatrices(randomNumbers2, rows2, cols2, mapM2, arrM2, sprM2);
 
-        printExperimentInformation(mode, exponent, arrM1, arrM2);
+        printExperimentInformation(mode, exponent, useLogPower,
+                setNegativeEntriesToZero, arrM1, arrM2);
 
         long time;
         for (MatrixMultType multType : multTypesToCalculate) {
@@ -88,10 +96,10 @@ public class MultTest {
                     if (mode) {
                         if (useLogPower) {
                             result = MatrixPowerer.logPower(mat1, multType,
-                                    exponent, rowSum, setNeagtiveEntriesToZero);
+                                    exponent, rowSum, setNegativeEntriesToZero);
                         } else {
                             result = MatrixPowerer.stdPower(mat1, multType,
-                                    exponent, rowSum, setNeagtiveEntriesToZero);
+                                    exponent, rowSum, setNegativeEntriesToZero);
                         }
                     } else {
                         result = mat1.multWith(mat2, multType);
@@ -126,9 +134,13 @@ public class MultTest {
     }
 
     private static void printExperimentInformation(boolean mode, int exponent,
+            boolean useLogPower, boolean setNegativeEntriesToZero,
             ArrayMatrix arrM1, ArrayMatrix arrM2) {
         System.out.println("LEFT IS NOT NEGATIVE:\t " + arrM1.isNonNegative());
         System.out.println("RIGHT IS NOT NEGATIVE:\t " + arrM2.isNonNegative());
+        System.out.println("\nONLY ALLOW NONNEGATIVE MATRICES:\t "
+                + setNegativeEntriesToZero);
+        System.out.println("USE LAST MATRIX POWER ALGORITHM:\t " + useLogPower);
         System.out.println("\n---\nCALCULATION TIME COMPARISON");
         if (mode) {
             System.out.println("CALCULATING LEFT ^ " + exponent + " ...");
@@ -163,13 +175,14 @@ public class MultTest {
 
     private static void printExperimentParameters(int runs, int randomNumbers1,
             int randomNumbers2, int rows1, int cols1, int rows2, int cols2,
-            double rowSum) {
+            double rowSum, long seed) {
         System.out.println("LEFT MATRIX SIZE:\t " + rows1 + " * " + cols1);
         System.out.println("LEFT RANDOM ENTRIES:\t " + randomNumbers1 + "\n");
         System.out.println("RIGHT MATRIX SIZE:\t " + rows2 + " * " + cols2);
         System.out.println("RIGHT RANDOM ENTRIES:\t " + randomNumbers2 + "\n");
         System.out.println("CALCULATION REPETITIONS: " + runs + "\n");
         System.out.println("ROW SUM:\t\t " + rowSum + "\n");
+        System.out.println("RANDOM NUMBER SEED:\t " + seed + "\n");
     }
 
     private static void printDifferences(Map<MatrixMultType, Matrix> results,
@@ -198,27 +211,26 @@ public class MultTest {
         }
     }
 
-    public static void fillMatrices(int randomNumbers2, int rows2, int cols2,
-            MapMatrix mapM2, ArrayMatrix arrM2, SparseMatrix sprM2) {
+    public static void fillMatrices(int randomNumbers, int rows, int cols,
+            MapMatrix mapMat, ArrayMatrix arrMat, SparseMatrix sprMat) {
         Matrix mat;
         for (int i = 0; i < 3; ++i) {
             if (i == 0) {
-                mat = mapM2;
-                for (int j = 0; j < randomNumbers2; ++j) {
-                    mat.put((int) (Math.random() * randomNumbers2),
-                            (int) (Math.random() * rows2),
-                            (int) (Math.random() * cols2));
+                mat = mapMat;
+                for (int j = 0; j < randomNumbers; ++j) {
+                    mat.put((int) (random.nextDouble() * randomNumbers),
+                            random.nextInt(rows), random.nextInt(cols));
                 }
             } else if (i == 1) {
-                mat = arrM2;
+                mat = arrMat;
             } else {
-                mat = sprM2;
+                mat = sprMat;
             }
 
             if (i > 0) {
-                for (int c = 0; c < mapM2.getCols(); ++c) {
-                    for (int r = 0; r < mapM2.getRows(); ++r) {
-                        mat.put(mapM2.get(r, c), r, c);
+                for (int c = 0; c < mapMat.getCols(); ++c) {
+                    for (int r = 0; r < mapMat.getRows(); ++r) {
+                        mat.put(mapMat.get(r, c), r, c);
                     }
                 }
             }
