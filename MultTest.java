@@ -1,62 +1,82 @@
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import matrices.ArrayMatrix;
 import matrices.MapMatrix;
 import matrices.Matrix;
+import matrices.MatrixMultType;
+import matrices.MatrixNorm;
+import matrices.MatrixPowerer;
 import matrices.SparseMatrix;
 
 public class MultTest {
 
     public static void main(String[] args) {
-        Map<Integer, String> multTypeIds = new HashMap<Integer, String>();
-        Map<Integer, String> matrixStorageTypeIds = new HashMap<Integer, String>();
-        setUpStringMaps(multTypeIds, matrixStorageTypeIds);
+        Map<Integer, String> matrixStorageTypeIds = setUpStringMaps();
 
-        Set<Integer> multTypesToCalculate = new HashSet<Integer>();
+        List<MatrixMultType> multTypesToCalculate = new LinkedList<MatrixMultType>();
         Set<Integer> matrixStorageTypesToCalculate = new HashSet<Integer>();
         setUpExperiment(multTypesToCalculate, matrixStorageTypesToCalculate);
 
-        Map<Integer, Matrix> results = new HashMap<Integer, Matrix>();
+        Map<MatrixMultType, Matrix> results = new HashMap<MatrixMultType, Matrix>();
+
+        // mode == true: calculate left ^ exponent
+        // mode == false: calculate left * right
+        boolean mode = true;
+        boolean useLogPower = true;
 
         boolean printResultMatrix = false;
         boolean printDifferences = true;
 
         int runs = 1;
-        int randomNumbers1 = 10000;
-        int randomNumbers2 = 10000;
+        int randomNumbers1 = 100;
+        int randomNumbers2 = 100;
         long time;
 
-        int rows1 = 1000;
-        int cols1 = 1000;
+        int rows1 = 100;
+        int cols1 = 100;
 
         int rows2 = cols1;
-        int cols2 = 1000;
+        int cols2 = 100;
+
+        int exponent = 1000;
+        double rowSum = 1;
 
         printExperimentParameters(runs, randomNumbers1, randomNumbers2, rows1,
-                cols1, rows2, cols2);
+                cols1, rows2, cols2, rowSum);
 
+        // set up left matrix
         MapMatrix mapM1 = new MapMatrix(rows1, cols1);
         ArrayMatrix arrM1 = new ArrayMatrix(rows1, cols1);
         SparseMatrix sprM1 = new SparseMatrix(rows1, cols1, 10);
         fillMatrices(randomNumbers1, rows1, cols1, mapM1, arrM1, sprM1);
+        System.out.println("LEFT IS NOT NEGATIVE:\t " + arrM1.isNotNegative());
 
+        // set up right matrix
         MapMatrix mapM2 = new MapMatrix(rows2, cols2);
         ArrayMatrix arrM2 = new ArrayMatrix(new double[rows2][cols2], false);
         SparseMatrix sprM2 = new SparseMatrix(rows2, cols2, 10);
         fillMatrices(randomNumbers2, rows2, cols2, mapM2, arrM2, sprM2);
+        System.out.println("RIGHT IS NOT NEGATIVE:\t " + arrM1.isNotNegative());
 
-        System.out.println("---\nCALCULATION TIME COMPARISON\n---\n");
+        System.out.println("\n---\nCALCULATION TIME COMPARISON");
+        if (mode) {
+            System.out.println("CALCULATING LEFT ^ " + exponent + " ...");
+        } else {
+            System.out.println("CALCULATING LEFT * RIGHT MATRIX ...");
+        }
+        System.out.println("---\n");
 
-        for (int multType : multTypesToCalculate) {
-            System.out.println(multTypeIds.get(multType)
-                    + " MATRIX MULTIPLICATION\n---");
-
+        for (MatrixMultType multType : multTypesToCalculate) {
+            System.out.println(multType + " MATRIX MULTIPLICATION\n---");
             Matrix result = null, mat1, mat2;
 
             for (int matrixStorageType : matrixStorageTypesToCalculate) {
+                // set matrices to multiply
                 if (matrixStorageType == 0) {
                     mat1 = mapM1;
                     mat2 = mapM2;
@@ -68,86 +88,103 @@ public class MultTest {
                     mat2 = sprM2;
                 }
 
+                // perform calculation
                 time = System.currentTimeMillis();
                 for (int run = 0; run < runs; ++run) {
-                    result = mat1.getNewInstance(rows1, cols2);
-                    if (multType == 0) {
-                        result = mat1.multWith(mat2);
-                    } else if (multType == 1) {
-                        result = mat1.prlMultWith(mat2);
-                    } else if (multType == 2) {
-                        mat1.winogradMultThisWithInto(mat2, result);
-                    } else if (multType == 3) {
-                        mat1.strassenMultThisWithInto(mat2, result);
-                    } else if (multType == 4) {
-                        mat1.prlStrassenMultThisWithInto(mat2, result);
+                    if (mode) {
+                        if (useLogPower) {
+                            result = MatrixPowerer.logPower(mat1, multType,
+                                    exponent, rowSum);
+                        } else {
+                            result = MatrixPowerer.stdPower(mat1, multType,
+                                    exponent, rowSum);
+                        }
+                    } else {
+                        result = mat1.multWith(mat2, multType);
                     }
                 }
                 time = System.currentTimeMillis() - time;
+
+                // print information, product of non-negative matrices should be
+                // non-negative
                 System.out.println(matrixStorageTypeIds.get(matrixStorageType)
-                        + "_MATRIX_TIME:\t " + time + " ms");
+                        + "_MATRIX_TIME:\t " + time
+                        + " ms\t IS NOT NEGATIVE:\t " + result.isNotNegative());
                 if (printResultMatrix) {
                     System.out.println(result);
                 }
 
+                // check if all storage types get the same result
+                Matrix oldResult = results.get(multType);
+                if (oldResult != null && !oldResult.equals(result)) {
+                    throw new IllegalStateException(
+                            "DIFFERENT RESULTS FOR SAME CALCULATION!\nTYPE:\t "
+                                    + multType);
+                }
                 results.put(multType, result);
             }
             System.out.println();
         }
 
         if (printDifferences) {
-            printDifferences(multTypeIds, results);
+            printDifferences(results, printResultMatrix);
         }
     }
 
-    private static void setUpExperiment(Set<Integer> multTypesToCalculate,
+    private static void setUpExperiment(
+            List<MatrixMultType> multTypesToCalculate,
             Set<Integer> matrixStorageTypesToCalculate) {
-        multTypesToCalculate.add(0);
-        multTypesToCalculate.add(1);
-        // multTypesToCalculate.add(2);
-        multTypesToCalculate.add(3);
-        multTypesToCalculate.add(4);
+        // multTypesToCalculate.add(MatrixMultType.NAIVE);
+        multTypesToCalculate.add(MatrixMultType.PARALLEL_NAIVE);
+        // multTypesToCalculate.add(MatrixMultType.WINOGRAD);
+        // multTypesToCalculate.add(MatrixMultType.STRASSEN_NAIVE_HYBRID);
+        multTypesToCalculate.add(MatrixMultType.PARALLEL_STRASSEN_NAIVE_HYBRID);
         // matrixStorageTypesToCalculate.add(0);
         matrixStorageTypesToCalculate.add(1);
         matrixStorageTypesToCalculate.add(2);
     }
 
-    private static void setUpStringMaps(Map<Integer, String> multTypeIds,
-            Map<Integer, String> matrixStorageTypeIds) {
-        multTypeIds.put(0, "NAIVE");
-        multTypeIds.put(1, "PARALLEL-NAIVE");
-        multTypeIds.put(2, "WINOGRAD");
-        multTypeIds.put(3, "STRASSEN-NAIVE HYBRID");
-        multTypeIds.put(4, "PARALLEL-STRASSEN-NAIVE HYBRID");
+    private static Map<Integer, String> setUpStringMaps() {
+        Map<Integer, String> matrixStorageTypeIds = new HashMap<Integer, String>();
+
         matrixStorageTypeIds.put(0, "MAP");
         matrixStorageTypeIds.put(1, "ARRAY");
         matrixStorageTypeIds.put(2, "SPARSE");
+
+        return matrixStorageTypeIds;
     }
 
     private static void printExperimentParameters(int runs, int randomNumbers1,
-            int randomNumbers2, int rows1, int cols1, int rows2, int cols2) {
+            int randomNumbers2, int rows1, int cols1, int rows2, int cols2,
+            double rowSum) {
         System.out.println("LEFT MATRIX SIZE:\t " + rows1 + " * " + cols1);
         System.out.println("LEFT RANDOM ENTRIES:\t " + randomNumbers1 + "\n");
         System.out.println("RIGHT MATRIX SIZE:\t " + rows2 + " * " + cols2);
         System.out.println("RIGHT RANDOM ENTRIES:\t " + randomNumbers2 + "\n");
         System.out.println("CALCULATION REPETITIONS: " + runs + "\n");
+        System.out.println("ROW SUM:\t\t " + rowSum + "\n");
     }
 
-    private static void printDifferences(Map<Integer, String> multTypeIds,
-            Map<Integer, Matrix> results) {
+    private static void printDifferences(Map<MatrixMultType, Matrix> results,
+            boolean printResultMatrix) {
         // difference calculation
         System.out.println("---\nDIFFERENCE CALCULATION\n---\n");
-        for (Integer multType : results.keySet()) {
-            for (Integer multType2 : results.keySet()) {
-                if (multType2 > multType) {
-                    System.out.println(multTypeIds.get(multType) + " VS "
-                            + multTypeIds.get(multType2) + "\n---");
+        for (MatrixMultType multType : results.keySet()) {
+            for (MatrixMultType multType2 : results.keySet()) {
+                if (multType2.ordinal() > multType.ordinal()) {
+                    System.out.println(multType + " VS " + multType2 + "\n---");
                     Matrix difference = results.get(multType).cloneSub(
                             results.get(multType2));
-                    System.out.println("2-NORM_DIFFERENCE:\t "
-                            + difference.get2Norm());
-                    System.out.println("MAX-NORM_DIFFERENCE:\t "
-                            + difference.getMaxNorm());
+
+                    if (printResultMatrix) {
+                        System.out.println(difference);
+                        System.out.println("---");
+                    }
+
+                    for (MatrixNorm norm : MatrixNorm.values()) {
+                        System.out.println(norm + " OF DIFFERENCE:\t "
+                                + difference.getNorm(norm));
+                    }
                     System.out.println();
                 }
             }

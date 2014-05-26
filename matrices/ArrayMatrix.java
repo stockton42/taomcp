@@ -12,6 +12,16 @@ public class ArrayMatrix extends Matrix {
 
     private double[][] content;
 
+    public ArrayMatrix(Matrix mat) {
+        this.content = new double[mat.getRows()][mat.getCols()];
+
+        for (int row = 0; row < getRows(); ++row) {
+            for (int col = 0; col < getCols(); ++col) {
+                content[row][col] = mat.get(row, col);
+            }
+        }
+    }
+
     public ArrayMatrix(int rows, int cols) {
         this.content = new double[rows][cols];
     }
@@ -217,22 +227,45 @@ public class ArrayMatrix extends Matrix {
     }
 
     @Override
-    public void strassenMultThisWithInto(Matrix matrix, Matrix result) {
+    public Matrix strassenMultThisWith(Matrix matrix) {
+        ArrayMatrix result = new ArrayMatrix(this.getRows(), matrix.getCols());
+
         strassenMultThisWithInto(matrix, result, WRITE_BY_ROW);
+
+        return result;
     }
 
     @Override
-    public void prlStrassenMultThisWithInto(Matrix matrix, Matrix result) {
+    public Matrix prlStrassenMultThisWith(Matrix matrix) {
+        ArrayMatrix result = new ArrayMatrix(this.getRows(), matrix.getCols());
+
         prlStrassenMultThisWithInto(matrix, result, WRITE_BY_ROW);
+
+        return result;
     }
 
     @Override
-    public void winogradMultThisWithInto(Matrix matrix, Matrix result) {
+    public Matrix winogradMultThisWith(Matrix matrix) {
+        ArrayMatrix result = new ArrayMatrix(this.getRows(), matrix.getCols());
+
         winogradMultThisWithInto(matrix, result, WRITE_BY_ROW);
+
+        return result;
     }
 
     @Override
-    public double getMaxNorm() {
+    public double getNorm(MatrixNorm norm) {
+        switch (norm) {
+        case MAX_NORM:
+            return getMaxNorm();
+        case TWO_NORM:
+            return get2Norm();
+        default:
+            throw new IllegalArgumentException();
+        }
+    }
+
+    private double getMaxNorm() {
         double result = 0;
 
         for (int row = 0; row < getRows(); ++row) {
@@ -247,8 +280,7 @@ public class ArrayMatrix extends Matrix {
         return result;
     }
 
-    @Override
-    public double get2Norm() {
+    private double get2Norm() {
         double result = 0;
 
         for (int row = 0; row < getRows(); ++row) {
@@ -259,5 +291,37 @@ public class ArrayMatrix extends Matrix {
         }
 
         return Math.sqrt(result);
+    }
+
+    @Override
+    public void stabilizeRowsTo(double stabilizeRowsTo) {
+        double[] rowSums = new double[getRows()];
+
+        for (int row = 0; row < getRows(); ++row) {
+            for (int col = 0; col < getCols(); ++col) {
+                rowSums[row] += content[row][col];
+            }
+
+            if (rowSums[row] == 0) {
+                rowSums[row] = 1;
+            }
+
+            for (int col = 0; col < getCols(); ++col) {
+                content[row][col] *= stabilizeRowsTo / rowSums[row];
+            }
+        }
+    }
+
+    @Override
+    public boolean isNotNegative() {
+        for (int row = 0; row < getRows(); ++row) {
+            for (int col = 0; col < getCols(); ++col) {
+                if (content[row][col] < 0) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }

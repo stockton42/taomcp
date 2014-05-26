@@ -361,7 +361,7 @@ public class SparseMatrix extends Matrix {
         }
 
         SparseMatrix result = new SparseMatrix(this.getRows(),
-                matrix.getCols(), this.nextValIndex);
+                matrix.getCols(), this.getRows() + matrix.getCols());
 
         multThisWithInto(matrix, result, WRITE_BY_ROW);
 
@@ -501,7 +501,7 @@ public class SparseMatrix extends Matrix {
 
     @Override
     public Matrix clone() {
-        SparseMatrix clone = new SparseMatrix(rows, cols, size);
+        SparseMatrix clone = new SparseMatrix(rows, cols, Math.max(size, 1));
 
         clone.col_ptr = Arrays.copyOf(this.col_ptr, this.col_ptr.length);
         clone.row_idx = Arrays.copyOf(this.row_idx, this.row_idx.length);
@@ -548,29 +548,58 @@ public class SparseMatrix extends Matrix {
             int rowShift, int colShift) {
         for (int index = mat.col_ptr[col - colShift]; index < mat.col_ptr[col
                 + 1 - colShift]; ++index) {
-            setLastEntryAt(mat.val[index], mat.row_idx[index] + rowShift);
-            entryCount++;
+            int row = mat.row_idx[index] + rowShift;
+            if (row < getRows()) {
+                setLastEntryAt(mat.val[index], row);
+                entryCount++;
+            }
         }
         return entryCount;
     }
 
     @Override
-    public void strassenMultThisWithInto(Matrix matrix, Matrix result) {
+    public Matrix strassenMultThisWith(Matrix matrix) {
+        SparseMatrix result = new SparseMatrix(this.getRows(),
+                matrix.getCols(), this.getRows() + matrix.getCols());
+
         strassenMultThisWithInto(matrix, result, WRITE_BY_ROW);
+
+        return result;
     }
 
     @Override
-    public void prlStrassenMultThisWithInto(Matrix matrix, Matrix result) {
+    public Matrix prlStrassenMultThisWith(Matrix matrix) {
+        SparseMatrix result = new SparseMatrix(this.getRows(),
+                matrix.getCols(), this.getRows() + matrix.getCols());
+
         prlStrassenMultThisWithInto(matrix, result, WRITE_BY_ROW);
+
+        return result;
     }
 
     @Override
-    public void winogradMultThisWithInto(Matrix matrix, Matrix result) {
+    public Matrix winogradMultThisWith(Matrix matrix) {
+        SparseMatrix result = new SparseMatrix(this.getRows(),
+                matrix.getCols(), this.getRows() + matrix.getCols());
+
         winogradMultThisWithInto(matrix, result, WRITE_BY_ROW);
+
+        return result;
     }
 
     @Override
-    public double getMaxNorm() {
+    public double getNorm(MatrixNorm norm) {
+        switch (norm) {
+        case MAX_NORM:
+            return getMaxNorm();
+        case TWO_NORM:
+            return get2Norm();
+        default:
+            throw new IllegalArgumentException();
+        }
+    }
+
+    private double getMaxNorm() {
         double result = 0;
 
         for (int index = 0; index < nextValIndex; ++index) {
@@ -583,8 +612,7 @@ public class SparseMatrix extends Matrix {
         return result;
     }
 
-    @Override
-    public double get2Norm() {
+    private double get2Norm() {
         double result = 0;
 
         for (int index = 0; index < nextValIndex; ++index) {
@@ -593,5 +621,39 @@ public class SparseMatrix extends Matrix {
         }
 
         return Math.sqrt(result);
+    }
+
+    @Override
+    public void stabilizeRowsTo(double stabilizeRowsTo) {
+        double[] rowSums = new double[getRows()];
+
+        for (int col = 0; col < getCols(); ++col) {
+            for (int colIndex = col_ptr[col]; colIndex < col_ptr[col + 1]; ++colIndex) {
+                rowSums[row_idx[colIndex]] += val[colIndex];
+            }
+        }
+
+        for (int row = 0; row < getRows(); ++row) {
+            if (rowSums[row] == 0) {
+                rowSums[row] = 1;
+            }
+        }
+
+        for (int col = 0; col < getCols(); ++col) {
+            for (int colIndex = col_ptr[col]; colIndex < col_ptr[col + 1]; ++colIndex) {
+                val[colIndex] *= stabilizeRowsTo / rowSums[row_idx[colIndex]];
+            }
+        }
+    }
+
+    @Override
+    public boolean isNotNegative() {
+        for (int index = 0; index < nextValIndex; ++index) {
+            if (val[index] < 0) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

@@ -190,9 +190,15 @@ public class MapMatrix extends Matrix {
                 Map<Integer, Double> colMap = this.content.get(row);
                 for (int col = 0; col < this.getCols(); ++col) {
                     if (add) {
-                        colMap.put(col, this.get(row, col) + mat.get(row, col));
+                        double value = this.get(row, col) + mat.get(row, col);
+                        if (value != DEFAULT_VALUE) {
+                            colMap.put(col, value);
+                        }
                     } else {
-                        colMap.put(col, this.get(row, col) - mat.get(row, col));
+                        double value = this.get(row, col) - mat.get(row, col);
+                        if (value != DEFAULT_VALUE) {
+                            colMap.put(col, value);
+                        }
                     }
                 }
             }
@@ -209,7 +215,10 @@ public class MapMatrix extends Matrix {
             Map<Integer, Double> colMap = clone.content.get(row);
             Map<Integer, Double> thisColMap = this.content.get(row);
             for (int col = 0; col < cols; col++) {
-                colMap.put(col, thisColMap.get(col));
+                Double value = thisColMap.get(col);
+                if (value != null && value != DEFAULT_VALUE) {
+                    colMap.put(col, value);
+                }
             }
         }
 
@@ -255,22 +264,45 @@ public class MapMatrix extends Matrix {
     }
 
     @Override
-    public void strassenMultThisWithInto(Matrix matrix, Matrix result) {
+    public Matrix strassenMultThisWith(Matrix matrix) {
+        MapMatrix result = new MapMatrix(this.getRows(), matrix.getCols());
+
         strassenMultThisWithInto(matrix, result, WRITE_BY_ROW);
+
+        return result;
     }
 
     @Override
-    public void prlStrassenMultThisWithInto(Matrix matrix, Matrix result) {
+    public Matrix prlStrassenMultThisWith(Matrix matrix) {
+        MapMatrix result = new MapMatrix(this.getRows(), matrix.getCols());
+
         prlStrassenMultThisWithInto(matrix, result, WRITE_BY_ROW);
+
+        return result;
     }
 
     @Override
-    public void winogradMultThisWithInto(Matrix matrix, Matrix result) {
+    public Matrix winogradMultThisWith(Matrix matrix) {
+        MapMatrix result = new MapMatrix(this.getRows(), matrix.getCols());
+
         winogradMultThisWithInto(matrix, result, WRITE_BY_ROW);
+
+        return result;
     }
 
     @Override
-    public double getMaxNorm() {
+    public double getNorm(MatrixNorm norm) {
+        switch (norm) {
+        case MAX_NORM:
+            return getMaxNorm();
+        case TWO_NORM:
+            return get2Norm();
+        default:
+            throw new IllegalArgumentException();
+        }
+    }
+
+    private double getMaxNorm() {
         double result = 0;
 
         for (int row = 0; row < getRows(); ++row) {
@@ -285,8 +317,7 @@ public class MapMatrix extends Matrix {
         return result;
     }
 
-    @Override
-    public double get2Norm() {
+    private double get2Norm() {
         double result = 0;
 
         for (int row = 0; row < getRows(); ++row) {
@@ -299,5 +330,45 @@ public class MapMatrix extends Matrix {
         }
 
         return Math.sqrt(result);
+    }
+
+    @Override
+    public void stabilizeRowsTo(double stabilizeRowsTo) {
+        double[] rowSums = new double[getRows()];
+
+        for (int row = 0; row < getRows(); row++) {
+            Map<Integer, Double> colMap = content.get(row);
+            for (int col = 0; col < getCols(); ++col) {
+                if (colMap.containsKey(col)) {
+                    rowSums[row] += colMap.get(col);
+                }
+            }
+
+            if (rowSums[row] == 0) {
+                rowSums[row] = 1;
+            }
+
+            for (int col = 0; col < getCols(); ++col) {
+                if (colMap.containsKey(col)) {
+                    colMap.put(col, colMap.get(col) * stabilizeRowsTo
+                            / rowSums[row]);
+                }
+            }
+        }
+    }
+
+    @Override
+    public boolean isNotNegative() {
+        for (int row = 0; row < getRows(); ++row) {
+            Map<Integer, Double> colMap = content.get(row);
+            for (int col = 0; col < getCols(); ++col) {
+                Double value = colMap.get(col);
+                if (value != null && value < 0) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }

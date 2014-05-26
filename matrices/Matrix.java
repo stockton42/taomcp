@@ -1,8 +1,19 @@
 package matrices;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.concurrent.RecursiveTask;
 
 public abstract class Matrix {
+
+    public static final boolean SHOW_MATRICES_WHEN_NOT_EQUAL = true;
+
+    // set up number format for toString() method
+    private static final DecimalFormatSymbols ds = new DecimalFormatSymbols();
+    private static final DecimalFormat df;
+    static {
+        df = new DecimalFormat("#0.00", ds);
+    }
 
     /**
      * Determines to which size the Strassen algorithm should use the standard
@@ -22,9 +33,9 @@ public abstract class Matrix {
         return this.getCols() == matrix.getRows();
     }
 
-    public abstract Matrix multWith(Matrix matrix);
+    protected abstract Matrix multWith(Matrix matrix);
 
-    public abstract Matrix prlMultWith(Matrix matrix);
+    protected abstract Matrix prlMultWith(Matrix matrix);
 
     public abstract double get(int row, int col);
 
@@ -40,7 +51,43 @@ public abstract class Matrix {
 
     public abstract Matrix getNewInstance(int rows, int cols);
 
+    /**
+     * Checks if this matrix is not negative.
+     * 
+     * @return is true if every entry of this matrix is greater or equal to
+     *         zero.
+     */
+    public abstract boolean isNotNegative();
+
+    public void setNegativeEntriesToZero() { // TODO NEW
+        for (int row = 0; row < getRows(); ++row) {
+            for (int col = 0; col < getCols(); ++col) {
+                if (this.get(row, col) < 0) {
+                    System.out.println("NEGATIVE ENTRY SET TO ZERO: "
+                            + this.get(row, col));
+                    this.put(0.0, row, col);
+                }
+            }
+        }
+    }
+
     public abstract void add(Matrix mat);
+
+    public Matrix getZero() {
+        return getNewInstance(this.getRows(), this.getCols());
+    }
+
+    public Matrix getOne() {
+        Matrix result = getNewInstance(this.getRows(), this.getCols());
+
+        for (int i = 0; i < Math.min(this.getRows(), this.getCols()); ++i) {
+            result.put(1, i, i);
+        }
+
+        return result;
+    }
+
+    public abstract void stabilizeRowsTo(double stabilizeRowsTo);
 
     public Matrix cloneAdd(Matrix mat) {
         Matrix result = this.clone();
@@ -61,7 +108,24 @@ public abstract class Matrix {
                 && this.getRows() == mat.getRows();
     }
 
-    public abstract void strassenMultThisWithInto(Matrix matrix, Matrix result);
+    public Matrix multWith(Matrix matrix, MatrixMultType multType) {
+        switch (multType) {
+        case NAIVE:
+            return this.multWith(matrix);
+        case PARALLEL_NAIVE:
+            return this.prlMultWith(matrix);
+        case PARALLEL_STRASSEN_NAIVE_HYBRID:
+            return this.prlStrassenMultThisWith(matrix);
+        case STRASSEN_NAIVE_HYBRID:
+            return this.strassenMultThisWith(matrix);
+        case WINOGRAD:
+            return this.winogradMultThisWith(matrix);
+        default:
+            throw new IllegalArgumentException();
+        }
+    }
+
+    protected abstract Matrix strassenMultThisWith(Matrix matrix);
 
     protected void strassenMultThisWithInto(Matrix matrix, Matrix result,
             boolean writeByRow) {
@@ -268,11 +332,11 @@ public abstract class Matrix {
         result.put(ii - iii + v - vii, 1, 1);
     }
 
-    public abstract void pool(Matrix upLeft, Matrix upRight, Matrix downLeft,
-            Matrix downRight);
+    protected abstract void pool(Matrix upLeft, Matrix upRight,
+            Matrix downLeft, Matrix downRight);
 
-    public boolean poolPossible(Matrix upLeft, Matrix upRight, Matrix downLeft,
-            Matrix downRight) {
+    protected boolean poolPossible(Matrix upLeft, Matrix upRight,
+            Matrix downLeft, Matrix downRight) {
         return upLeft.hasSameDimensions(upRight)
                 && upRight.hasSameDimensions(downLeft)
                 && downLeft.hasSameDimensions(downRight)
@@ -291,15 +355,14 @@ public abstract class Matrix {
         return newSize;
     }
 
-    public abstract void prlStrassenMultThisWithInto(Matrix matrix,
-            Matrix result);
+    protected abstract Matrix prlStrassenMultThisWith(Matrix matrix);
 
     protected void prlStrassenMultThisWithInto(Matrix matrix, Matrix result,
             boolean writeByRow) {
         strassenMultThisWithInto(matrix, result, writeByRow, 0);
     }
 
-    public abstract void winogradMultThisWithInto(Matrix matrix, Matrix result);
+    protected abstract Matrix winogradMultThisWith(Matrix matrix);
 
     protected void winogradMultThisWithInto(Matrix matrix, Matrix result,
             boolean writeByRow) {
@@ -348,9 +411,7 @@ public abstract class Matrix {
         result.put(val - A[leftRow] - B[rightCol], leftRow, rightCol);
     }
 
-    public abstract double getMaxNorm();
-
-    public abstract double get2Norm();
+    public abstract double getNorm(MatrixNorm norm);
 
     public boolean equals(Matrix mat) {
         if (this.getCols() != mat.getCols() || this.getRows() != mat.getRows()) {
@@ -360,6 +421,15 @@ public abstract class Matrix {
         for (int c = 0; c < this.getCols(); ++c) {
             for (int r = 0; r < this.getRows(); ++r) {
                 if (this.get(r, c) != mat.get(r, c)) {
+
+                    if (SHOW_MATRICES_WHEN_NOT_EQUAL) {
+                        System.err.println("\n" + this);
+                        System.err.println("\nVS (" + r + ", " + c + "): "
+                                + this.get(r, c) + " VS " + mat.get(r, c)
+                                + "\n");
+                        System.err.println(mat);
+                    }
+
                     return false;
                 }
             }
@@ -413,7 +483,7 @@ public abstract class Matrix {
         for (int i = 0; i < this.getRows(); i++) {
             for (int j = 0; j < this.getCols(); j++) {
                 double entry = this.get(i, j);
-                result.append(entry + "\t");
+                result.append(df.format(entry) + "\t");
             }
 
             result.append("\n");
