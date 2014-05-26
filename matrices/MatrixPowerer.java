@@ -32,26 +32,32 @@ public class MatrixPowerer {
 
     public static Matrix stdPower(Matrix mat, MatrixMultType matMultType,
             int exponent, double stabilizeRowsTo,
-            boolean setNeagtiveEntriesToZero) {
+            boolean setNegativeEntriesToZero) {
         if (exponent == 0) {
             Matrix result = mat.getOne();
+            if (setNegativeEntriesToZero) {
+                result.setNegativeEntriesToZero();
+            }
             if (stabilizeRowsTo != NO_STABILIZE) {
                 result.stabilizeRowsTo(stabilizeRowsTo);
             }
+
             return result;
         }
 
         Matrix qn = mat.clone();
+        if (setNegativeEntriesToZero) {
+            qn.setNegativeEntriesToZero();
+        }
         if (stabilizeRowsTo != NO_STABILIZE) {
             qn.stabilizeRowsTo(stabilizeRowsTo);
         }
 
         for (int i = 1; i < exponent; ++i) {
             qn = qn.multWith(mat, matMultType);
-            if (setNeagtiveEntriesToZero) {
+            if (setNegativeEntriesToZero) {
                 qn.setNegativeEntriesToZero();
             }
-
             if (stabilizeRowsTo != NO_STABILIZE) {
                 qn.stabilizeRowsTo(stabilizeRowsTo);
             }
@@ -62,9 +68,12 @@ public class MatrixPowerer {
 
     public static Matrix logPower(Matrix mat, MatrixMultType matMultType,
             int exponent, double stabilizeRowsTo,
-            boolean setNeagtiveEntriesToZero) {
+            boolean setNegativeEntriesToZero) {
         if (exponent == 0) {
             Matrix result = mat.getOne();
+            if (setNegativeEntriesToZero) {
+                result.setNegativeEntriesToZero();
+            }
             if (stabilizeRowsTo != NO_STABILIZE) {
                 result.stabilizeRowsTo(stabilizeRowsTo);
             }
@@ -72,11 +81,15 @@ public class MatrixPowerer {
         }
 
         List<Integer> twoPowers = MathHelper.twoPowersNeededFor(exponent);
+
         Matrix qn;
         if (twoPowers.contains(0)) {
             qn = mat.clone();
         } else {
             qn = mat.getOne();
+        }
+        if (setNegativeEntriesToZero) {
+            qn.setNegativeEntriesToZero();
         }
         if (stabilizeRowsTo != NO_STABILIZE) {
             qn.stabilizeRowsTo(stabilizeRowsTo);
@@ -84,26 +97,27 @@ public class MatrixPowerer {
 
         int maxPower = Collections.max(twoPowers);
         Matrix temp = mat.clone();
+        if (setNegativeEntriesToZero) {
+            temp.setNegativeEntriesToZero();
+        }
         if (stabilizeRowsTo != NO_STABILIZE) {
             temp.stabilizeRowsTo(stabilizeRowsTo);
         }
 
         for (int i = 1; i <= maxPower; ++i) {
             temp = temp.multWith(temp, matMultType);
-            if (setNeagtiveEntriesToZero) {
+            if (setNegativeEntriesToZero) {
                 temp.setNegativeEntriesToZero();
             }
-
             if (stabilizeRowsTo != NO_STABILIZE) {
                 temp.stabilizeRowsTo(stabilizeRowsTo);
             }
 
             if (twoPowers.contains(i)) {
                 qn = qn.multWith(temp, matMultType);
-                if (setNeagtiveEntriesToZero) {
+                if (setNegativeEntriesToZero) {
                     qn.setNegativeEntriesToZero();
                 }
-
                 if (stabilizeRowsTo != NO_STABILIZE) {
                     qn.stabilizeRowsTo(stabilizeRowsTo);
                 }
