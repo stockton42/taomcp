@@ -7,4 +7,4 @@ In this seminar, I intend to find a fast algorithm to calculate high powers of s
 
 So far, I have compared the standard multiplication algorithm to the Strassen algorithm.
 
-Results can be found in "results.txt".
+Results can be found in the .txt files.
