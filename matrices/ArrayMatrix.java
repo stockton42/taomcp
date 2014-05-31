@@ -327,16 +327,21 @@ public class ArrayMatrix extends Matrix {
 
     @Override
     protected void setNegativeEntriesToZero(boolean showModifications) {
+        double minValueSetToZero = 0.0;
         for (int row = 0; row < getRows(); ++row) {
             for (int col = 0; col < getCols(); ++col) {
                 if (content[row][col] < 0) {
-                    if (showModifications) {
-                        System.out.println("NEGATIVE ENTRY SET TO ZERO: "
-                                + content[row][col]);
+                    if (showModifications
+                            && minValueSetToZero > content[row][col]) {
+                        minValueSetToZero = content[row][col];
                     }
                     content[row][col] = DEFAULT_VALUE;
                 }
             }
+        }
+        if (showModifications && minValueSetToZero < 0) {
+            System.out.println("MINIMAL NEGATIVE ENTRY SET TO ZERO: "
+                    + minValueSetToZero);
         }
     }
 }

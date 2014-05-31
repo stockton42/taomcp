@@ -121,6 +121,7 @@ public class MatrixPowerer {
                 if (stabilizeRowsTo != NO_STABILIZE) {
                     qn.stabilizeRowsTo(stabilizeRowsTo);
                 }
+
             }
         }
 

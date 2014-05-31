@@ -659,14 +659,18 @@ public class SparseMatrix extends Matrix {
 
     @Override
     protected void setNegativeEntriesToZero(boolean showModifications) {
+        double minValueSetToZero = 0.0;
         for (int index = 0; index < nextValIndex; ++index) {
             if (val[index] < 0) {
-                if (showModifications) {
-                    System.out.println("NEGATIVE ENTRY SET TO ZERO: "
-                            + val[index]);
+                if (showModifications && minValueSetToZero > val[index]) {
+                    minValueSetToZero = val[index];
                 }
                 val[index] = DEFAULT_VALUE;
             }
+        }
+        if (showModifications && minValueSetToZero < 0) {
+            System.out.println("MINIMAL NEGATIVE ENTRY SET TO ZERO: "
+                    + minValueSetToZero);
         }
     }
 }

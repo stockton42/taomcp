@@ -374,13 +374,14 @@ public class MapMatrix extends Matrix {
 
     @Override
     protected void setNegativeEntriesToZero(boolean showModifications) {
+        double minValueSetToZero = 0.0;
         for (int row = 0; row < getRows(); ++row) {
             Map<Integer, Double> colMap = content.get(row);
             for (int col = 0; col < getCols(); ++col) {
                 if (colMap.containsKey(col) && colMap.get(col) < 0) {
-                    if (showModifications) {
-                        System.out.println("NEGATIVE ENTRY SET TO ZERO: "
-                                + colMap.get(col));
+                    if (showModifications
+                            && minValueSetToZero > colMap.get(col)) {
+                        minValueSetToZero = colMap.get(col);
                     }
                     // if (DEFAULT_VALUE == 0) {
                     colMap.remove(col);
@@ -389,6 +390,10 @@ public class MapMatrix extends Matrix {
                     // }
                 }
             }
+        }
+        if (showModifications && minValueSetToZero < 0) {
+            System.out.println("MINIMAL NEGATIVE ENTRY SET TO ZERO: "
+                    + minValueSetToZero);
         }
     }
 }

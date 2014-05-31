@@ -17,6 +17,7 @@ import matrices.SparseMatrix;
 public class MultTest {
 
     private static final Random random = new Random();
+    private static final double NO_STABILIZE = MatrixPowerer.NO_STABILIZE;
 
     public static void main(String[] args) {
         Map<Integer, String> matrixStorageTypeIds = setUpStringMaps();
@@ -61,13 +62,13 @@ public class MultTest {
         MapMatrix mapM1 = new MapMatrix(rows1, cols1);
         ArrayMatrix arrM1 = new ArrayMatrix(rows1, cols1);
         SparseMatrix sprM1 = new SparseMatrix(rows1, cols1, 10);
-        fillMatrices(randomNumbers1, rows1, cols1, mapM1, arrM1, sprM1);
+        fillMatrices(randomNumbers1, rows1, cols1, mapM1, arrM1, sprM1, rowSum);
 
         // set up right matrix
         MapMatrix mapM2 = new MapMatrix(rows2, cols2);
         ArrayMatrix arrM2 = new ArrayMatrix(new double[rows2][cols2], false);
         SparseMatrix sprM2 = new SparseMatrix(rows2, cols2, 10);
-        fillMatrices(randomNumbers2, rows2, cols2, mapM2, arrM2, sprM2);
+        fillMatrices(randomNumbers2, rows2, cols2, mapM2, arrM2, sprM2, rowSum);
 
         printExperimentInformation(mode, exponent, useLogPower,
                 setNegativeEntriesToZero, arrM1, arrM2);
@@ -212,7 +213,8 @@ public class MultTest {
     }
 
     public static void fillMatrices(int randomNumbers, int rows, int cols,
-            MapMatrix mapMat, ArrayMatrix arrMat, SparseMatrix sprMat) {
+            MapMatrix mapMat, ArrayMatrix arrMat, SparseMatrix sprMat,
+            double rowSum) {
         Matrix mat;
         for (int i = 0; i < 3; ++i) {
             if (i == 0) {
@@ -220,6 +222,20 @@ public class MultTest {
                 for (int j = 0; j < randomNumbers; ++j) {
                     mat.put((int) (random.nextDouble() * randomNumbers),
                             random.nextInt(rows), random.nextInt(cols));
+                }
+
+                // check sum of all entries in a row
+                if (rowSum != NO_STABILIZE) {
+                    for (int row = 0; row < mat.getRows(); ++row) {
+                        double sum = 0.0;
+                        for (int col = 0; col < mat.getCols(); ++col) {
+                            sum += mat.get(row, col);
+                        }
+                        if (sum == 0.0) {
+                            mat.put(1.0, row, row);
+                        }
+                    }
+                    mat.stabilizeRowsTo(rowSum);
                 }
             } else if (i == 1) {
                 mat = arrMat;
