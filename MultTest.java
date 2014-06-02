@@ -104,6 +104,8 @@ public class MultTest {
                         }
                     } else {
                         result = mat1.multWith(mat2, multType);
+                        result.setNegativeEntriesToZero();
+                        result.stabilizeRowsTo(rowSum);
                     }
                 }
                 time = System.currentTimeMillis() - time;
@@ -232,7 +234,7 @@ public class MultTest {
                             sum += mat.get(row, col);
                         }
                         if (sum == 0.0) {
-                            mat.put(1.0, row, row);
+                            mat.put(rowSum, row, row);
                         }
                     }
                     mat.stabilizeRowsTo(rowSum);
