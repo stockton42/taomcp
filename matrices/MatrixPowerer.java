@@ -10,11 +10,11 @@ public class MatrixPowerer {
     public static final double NO_STABILIZE = 0;
 
     public static void main(String[] args) {
-        double[][] arr = { { 10, 1 }, { 1, 100 } };
+        double[][] arr = { { 9, 1 }, { 1, 99 } };
 
         Matrix test = new ArrayMatrix(arr, false);
 
-        test = new CcsMatrix(test);
+        test = new CrsMatrix(test);
         // test = new MapMatrix(test);
 
         System.out.println(test + "\n");
@@ -35,26 +35,28 @@ public class MatrixPowerer {
             boolean setNegativeEntriesToZero) {
         if (exponent == 0) {
             Matrix result = mat.getOne();
-            if (setNegativeEntriesToZero) {
+            if (setNegativeEntriesToZero)
                 result.setNegativeEntriesToZero();
-            }
-            if (stabilizeRowsTo != NO_STABILIZE) {
+            if (stabilizeRowsTo != NO_STABILIZE)
                 result.stabilizeRowsTo(stabilizeRowsTo);
-            }
 
             return result;
         }
 
-        Matrix qn = mat.clone();
-        if (setNegativeEntriesToZero) {
+        Matrix argumentMatrix = mat;
+        if (setNegativeEntriesToZero)
+            argumentMatrix.setNegativeEntriesToZero();
+        if (stabilizeRowsTo != NO_STABILIZE)
+            argumentMatrix.stabilizeRowsTo(stabilizeRowsTo);
+
+        Matrix qn = argumentMatrix.clone();
+        if (setNegativeEntriesToZero)
             qn.setNegativeEntriesToZero();
-        }
-        if (stabilizeRowsTo != NO_STABILIZE) {
+        if (stabilizeRowsTo != NO_STABILIZE)
             qn.stabilizeRowsTo(stabilizeRowsTo);
-        }
 
         for (int i = 1; i < exponent; ++i) {
-            qn = qn.multWith(mat, matMultType);
+            qn = qn.multWith(argumentMatrix, matMultType);
             if (setNegativeEntriesToZero) {
                 qn.setNegativeEntriesToZero();
             }
@@ -88,39 +90,30 @@ public class MatrixPowerer {
         } else {
             qn = mat.getOne();
         }
-        if (setNegativeEntriesToZero) {
+        if (setNegativeEntriesToZero)
             qn.setNegativeEntriesToZero();
-        }
-        if (stabilizeRowsTo != NO_STABILIZE) {
+        if (stabilizeRowsTo != NO_STABILIZE)
             qn.stabilizeRowsTo(stabilizeRowsTo);
-        }
 
         int maxPower = Collections.max(twoPowers);
         Matrix temp = mat.clone();
-        if (setNegativeEntriesToZero) {
+        if (setNegativeEntriesToZero)
             temp.setNegativeEntriesToZero();
-        }
-        if (stabilizeRowsTo != NO_STABILIZE) {
+        if (stabilizeRowsTo != NO_STABILIZE)
             temp.stabilizeRowsTo(stabilizeRowsTo);
-        }
 
         for (int i = 1; i <= maxPower; ++i) {
             temp = temp.multWith(temp, matMultType);
-            if (setNegativeEntriesToZero) {
-                temp.setNegativeEntriesToZero();
-            }
-            if (stabilizeRowsTo != NO_STABILIZE) {
+            temp.setNegativeEntriesToZero();
+            if (stabilizeRowsTo != NO_STABILIZE)
                 temp.stabilizeRowsTo(stabilizeRowsTo);
-            }
 
             if (twoPowers.contains(i)) {
                 qn = qn.multWith(temp, matMultType);
-                if (setNegativeEntriesToZero) {
+                if (setNegativeEntriesToZero)
                     qn.setNegativeEntriesToZero();
-                }
-                if (stabilizeRowsTo != NO_STABILIZE) {
+                if (stabilizeRowsTo != NO_STABILIZE)
                     qn.stabilizeRowsTo(stabilizeRowsTo);
-                }
             }
         }
 
