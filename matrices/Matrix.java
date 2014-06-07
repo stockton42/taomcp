@@ -422,7 +422,8 @@ public abstract class Matrix {
                         // System.err.println("\n" + this);
                         System.err.println("\nERROR AT ENTRY (" + r + ", " + c
                                 + "): " + this.get(r, c) + " VS "
-                                + mat.get(r, c) + "\n");
+                                + mat.get(r, c) + ":\t"
+                                + (this.get(r, c) - mat.get(r, c)) + "\n");
                         // System.err.println(mat);
                     }
 

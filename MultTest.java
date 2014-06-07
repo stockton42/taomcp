@@ -7,13 +7,12 @@ import java.util.Random;
 import java.util.Set;
 
 import matrices.ArrayMatrix;
-import matrices.CcsMatrix;
+import matrices.CrsMatrix;
 import matrices.MapMatrix;
 import matrices.Matrix;
 import matrices.MatrixMultType;
 import matrices.MatrixNorm;
 import matrices.MatrixPowerer;
-import matrices.RcsMatrix;
 
 public class MultTest {
 
@@ -40,7 +39,7 @@ public class MultTest {
         int runs = 1;
         int randomNumbers1 = 100;
         int randomNumbers2 = 100;
-        int exponent = 10000;
+        int exponent = 10_000;
 
         // set up the dimensions of the matrices
         int rows1 = 100;
@@ -62,18 +61,14 @@ public class MultTest {
         // set up left matrix
         MapMatrix mapM1 = new MapMatrix(rows1, cols1);
         ArrayMatrix arrM1 = new ArrayMatrix(rows1, cols1);
-        CcsMatrix sprM1 = new CcsMatrix(rows1, cols1, 10);
-        RcsMatrix sprcM1 = new RcsMatrix(rows1, cols1, 10);
-        fillMatrices(randomNumbers1, rows1, cols1, mapM1, arrM1, sprM1, sprcM1,
-                rowSum);
+        CrsMatrix sprM1 = new CrsMatrix(rows1, cols1, 10);
+        fillMatrices(randomNumbers1, rows1, cols1, mapM1, arrM1, sprM1, rowSum);
 
         // set up right matrix
         MapMatrix mapM2 = new MapMatrix(rows2, cols2);
         ArrayMatrix arrM2 = new ArrayMatrix(new double[rows2][cols2], false);
-        CcsMatrix sprM2 = new CcsMatrix(rows2, cols2, 10);
-        RcsMatrix sprcM2 = new RcsMatrix(rows2, cols2, 10);
-        fillMatrices(randomNumbers2, rows2, cols2, mapM2, arrM2, sprM2, sprcM2,
-                rowSum);
+        CrsMatrix sprM2 = new CrsMatrix(rows2, cols2, 10);
+        fillMatrices(randomNumbers2, rows2, cols2, mapM2, arrM2, sprM2, rowSum);
 
         printExperimentInformation(mode, exponent, useLogPower,
                 setNegativeEntriesToZero, arrM1, arrM2);
@@ -91,12 +86,9 @@ public class MultTest {
                 } else if (matrixStorageType == 1) {
                     mat1 = arrM1;
                     mat2 = arrM2;
-                } else if (matrixStorageType == 2) {
+                } else {
                     mat1 = sprM1;
                     mat2 = sprM2;
-                } else {
-                    mat1 = sprcM1;
-                    mat2 = sprcM2;
                 }
 
                 // perform calculation
@@ -152,7 +144,7 @@ public class MultTest {
             ArrayMatrix arrM1, ArrayMatrix arrM2) {
         System.out.println("LEFT IS NON-NEGATIVE:\t " + arrM1.isNonNegative());
         System.out.println("RIGHT IS NON-NEGATIVE:\t " + arrM2.isNonNegative());
-        System.out.println("\nONLY ALLOW NONNEGATIVE MATRICES:\t "
+        System.out.println("\nONLY ALLOW NON-NEGATIVE MATRICES:\t "
                 + setNegativeEntriesToZero);
         System.out.println("USE FAST MATRIX POWER ALGORITHM:\t " + useLogPower);
         System.out.println("\n---\nCALCULATION TIME COMPARISON");
@@ -174,8 +166,7 @@ public class MultTest {
         multTypesToCalculate.add(MatrixMultType.PARALLEL_STRASSEN_NAIVE_HYBRID);
         // matrixStorageTypesToCalculate.add(0); // MAP
         matrixStorageTypesToCalculate.add(1); // ARRAY
-        matrixStorageTypesToCalculate.add(2); // CCS
-        matrixStorageTypesToCalculate.add(3); // RCS
+        matrixStorageTypesToCalculate.add(2); // RCS
     }
 
     private static Map<Integer, String> setUpStringMaps() {
@@ -183,8 +174,7 @@ public class MultTest {
 
         matrixStorageTypeIds.put(0, "MAP");
         matrixStorageTypeIds.put(1, "ARRAY");
-        matrixStorageTypeIds.put(2, "CCS");
-        matrixStorageTypeIds.put(3, "RCS");
+        matrixStorageTypeIds.put(2, "RCS");
 
         return matrixStorageTypeIds;
     }
@@ -228,10 +218,10 @@ public class MultTest {
     }
 
     public static void fillMatrices(int randomNumbers, int rows, int cols,
-            MapMatrix mapMat, ArrayMatrix arrMat, CcsMatrix sprMat,
-            RcsMatrix sprcMat, double rowSum) {
+            MapMatrix mapMat, ArrayMatrix arrMat, CrsMatrix sprMat,
+            double rowSum) {
         Matrix mat;
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < 3; ++i) {
             if (i == 0) {
                 mat = mapMat;
                 for (int j = 0; j < randomNumbers; ++j) {
@@ -254,10 +244,8 @@ public class MultTest {
                 }
             } else if (i == 1) {
                 mat = arrMat;
-            } else if (i == 2) {
-                mat = sprMat;
             } else {
-                mat = sprcMat;
+                mat = sprMat;
             }
 
             if (i > 0) {

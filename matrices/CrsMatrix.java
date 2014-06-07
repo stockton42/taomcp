@@ -6,20 +6,20 @@ import tools.ArrayHelper;
 
 /**
  * Is a model for a matrix containing only a few double values. Uses the
- * Compressed Column Storage (CCS) algorithm. Best performance is provided if
- * less than 0,1 % of all entries are used. Do NOT use access methods with
- * multiple threads. This matrix is not thread-safe!
+ * Compressed Row Storage (CRS) algorithm. Best performance is provided if less
+ * than 0,1 % of all entries are used. Do NOT use access methods with multiple
+ * threads. This matrix is not thread-safe!
  * 
  * @author Michael Stock
  */
-public class CcsMatrix extends Matrix {
+public class CrsMatrix extends Matrix {
 
     private int rows;
     private int cols;
 
     private double[] val;
-    private int[] row_idx;
-    private int[] col_ptr;
+    private int[] col_idx;
+    private int[] row_ptr;
     private int nextValIndex;
     private int size;
 
@@ -28,17 +28,17 @@ public class CcsMatrix extends Matrix {
     private static final int DEFAULT_VALUE = 0;
     private static final int NUMBER_OF_THREADS = 8;
 
-    // write complete columns first in multiplication
-    private static final boolean WRITE_BY_ROW = false;
+    // write complete rows first in multiplication
+    private static final boolean WRITE_BY_ROW = true;
 
     // increases speed when the matrix is not too sparse
     private static final boolean BINARY_ACCESS = true;
 
-    public CcsMatrix(int rows, int cols, int initNumberOfVals) {
+    public CrsMatrix(int rows, int cols, int initNumberOfVals) {
         initWith(rows, cols, initNumberOfVals);
     }
 
-    public CcsMatrix(int rows, int cols) {
+    public CrsMatrix(int rows, int cols) {
         initWith(rows, cols, rows + cols);
     }
 
@@ -50,58 +50,58 @@ public class CcsMatrix extends Matrix {
         this.cols = cols;
         nextValIndex = 0;
         size = initNumberOfVals;
-        initArraysWithSize(size, cols);
+        initArraysWithSize(size, rows);
     }
 
-    private void initArraysWithSize(int size, int cols) {
+    private void initArraysWithSize(int size, int rows) {
         val = new double[size];
-        row_idx = new int[size];
-        col_ptr = new int[cols + 1];
+        col_idx = new int[size];
+        row_ptr = new int[rows + 1];
     }
 
-    public CcsMatrix(Matrix mat) {
+    public CrsMatrix(Matrix mat) {
         this.rows = mat.getRows();
         this.cols = mat.getCols();
         nextValIndex = 0;
         size = rows + cols;
-        initArraysWithSize(size, cols);
+        initArraysWithSize(size, rows);
         int entryCount = 0;
-        for (int c = 0; c < cols; ++c) {
-            this.col_ptr[c] = entryCount;
-            for (int r = 0; r < rows; ++r) {
+        for (int r = 0; r < rows; ++r) {
+            this.row_ptr[r] = entryCount;
+            for (int c = 0; c < cols; ++c) {
                 double entry = mat.get(r, c);
                 if (entry != DEFAULT_VALUE) {
-                    setLastEntryAt(entry, r);
+                    setLastEntryAt(entry, c);
                     entryCount++;
                 }
             }
         }
-        this.col_ptr[cols] = entryCount;
+        this.row_ptr[rows] = entryCount;
     }
 
-    private CcsMatrix(CcsMatrix[] matrices) {
+    private CrsMatrix(CrsMatrix[] matrices) {
         this.rows = matrices[0].rows;
         this.cols = matrices[0].cols;
         size = 0;
         for (int matIndex = 0; matIndex < matrices.length; ++matIndex) {
             size += matrices[matIndex].nextValIndex;
         }
-        initArraysWithSize(size, cols);
+        initArraysWithSize(size, rows);
         nextValIndex = 0;
         int entryCount = 0;
 
-        for (int col = 0; col < cols; ++col) {
-            this.col_ptr[col] = entryCount;
-            int matIndex = col % matrices.length;
-            for (int row = 0; row < rows; ++row) {
+        for (int row = 0; row < rows; ++row) {
+            this.row_ptr[row] = entryCount;
+            int matIndex = row % matrices.length;
+            for (int col = 0; col < cols; ++col) {
                 double entry = matrices[matIndex].get(row, col);
                 if (entry != DEFAULT_VALUE) {
-                    setLastEntryAt(entry, row);
+                    setLastEntryAt(entry, col);
                     entryCount++;
                 }
             }
         }
-        this.col_ptr[cols] = entryCount;
+        this.row_ptr[rows] = entryCount;
     }
 
     public static void main(String[] args) {
@@ -123,7 +123,7 @@ public class CcsMatrix extends Matrix {
                     (int) (Math.random() * rows), (int) (Math.random() * cols));
         }
 
-        CcsMatrix sm = new CcsMatrix(am);
+        CrsMatrix sm = new CrsMatrix(am);
         if (!sm.equals(am)) {
             throw new IllegalStateException("MATRICES ARE NOT EQUAL!");
         }
@@ -133,8 +133,8 @@ public class CcsMatrix extends Matrix {
         int runs = 1;
         time = System.currentTimeMillis();
         for (int run = 0; run < runs; ++run) {
-            for (int c = 0; c < cols; ++c) {
-                for (int r = 0; r < rows; ++r) {
+            for (int r = 0; r < rows; ++r) {
+                for (int c = 0; c < cols; ++c) {
                     sm.getPosition(r, c);
                 }
             }
@@ -144,7 +144,7 @@ public class CcsMatrix extends Matrix {
     }
 
     public static void delTest() {
-        CcsMatrix test = new CcsMatrix(3, 3, 2);
+        CrsMatrix test = new CrsMatrix(3, 3, 2);
         test.printStatus();
         test.put(1, 0, 0);
         test.printStatus();
@@ -165,13 +165,13 @@ public class CcsMatrix extends Matrix {
     }
 
     private int getPosition(int row, int col) {
-        int startPos = col_ptr[col];
-        int maxIndex = col_ptr[col + 1] - 1;
+        int startPos = row_ptr[row];
+        int maxIndex = row_ptr[row + 1] - 1;
 
         if (startPos > maxIndex) {
             return NO_POSITION;
         } else if (startPos == maxIndex) {
-            if (row_idx[startPos] == row) {
+            if (col_idx[startPos] == col) {
                 return startPos;
             } else {
                 return NO_POSITION;
@@ -180,7 +180,7 @@ public class CcsMatrix extends Matrix {
 
         if (!BINARY_ACCESS) {
             for (int i = startPos; i <= maxIndex; ++i) {
-                if (row_idx[i] == row) {
+                if (col_idx[i] == col) {
                     return i;
                 }
             }
@@ -188,9 +188,9 @@ public class CcsMatrix extends Matrix {
             // binary search: row_idx is in the right order
             while (startPos <= maxIndex) {
                 int i = (maxIndex - startPos) / 2 + startPos;
-                if (row_idx[i] > row) {
+                if (col_idx[i] > col) {
                     maxIndex = i - 1;
-                } else if (row_idx[i] < row) {
+                } else if (col_idx[i] < col) {
                     startPos = i + 1;
                 } else {
                     return i;
@@ -214,17 +214,17 @@ public class CcsMatrix extends Matrix {
         }
     }
 
-    private void setLastEntryAt(double val, int row) {
+    private void setLastEntryAt(double val, int col) {
         // no entry position test
 
         if (nextValIndex == size) {
             size *= ARRAY_MULT_FACTOR;
             this.val = Arrays.copyOf(this.val, size);
-            this.row_idx = Arrays.copyOf(this.row_idx, size);
+            this.col_idx = Arrays.copyOf(this.col_idx, size);
         }
 
         this.val[nextValIndex] = val;
-        this.row_idx[nextValIndex] = row;
+        this.col_idx[nextValIndex] = col;
 
         nextValIndex++;
     }
@@ -237,14 +237,14 @@ public class CcsMatrix extends Matrix {
         int position = getPosition(row, col);
         if (position == NO_POSITION && val != DEFAULT_VALUE) {
             // get next larger row or column index
-            int minNewIndex = col_ptr[col];
-            int maxNewIndex = col_ptr[col + 1] - 1;
+            int minNewIndex = row_ptr[row];
+            int maxNewIndex = row_ptr[row + 1] - 1;
 
             // enlarge storage if necessary
             if (nextValIndex == size) {
                 size *= ARRAY_MULT_FACTOR;
                 this.val = Arrays.copyOf(this.val, size);
-                this.row_idx = Arrays.copyOf(this.row_idx, size);
+                this.col_idx = Arrays.copyOf(this.col_idx, size);
             }
 
             int insertPosition = -1;
@@ -256,22 +256,22 @@ public class CcsMatrix extends Matrix {
                 insertPosition = minNewIndex;
             } else if (minNewIndex == maxNewIndex) {
                 // one entry
-                if (row_idx[minNewIndex] < row) {
+                if (col_idx[minNewIndex] < col) {
                     insertPosition = minNewIndex + 1;
                 } else {
                     insertPosition = minNewIndex;
                 }
-            } else if (row_idx[minNewIndex] > row) {
+            } else if (col_idx[minNewIndex] > col) {
                 // first entry in column
                 insertPosition = minNewIndex;
-            } else if (row_idx[maxNewIndex] < row) {
+            } else if (col_idx[maxNewIndex] < col) {
                 // last entry in column
                 insertPosition = maxNewIndex + 1;
             } else {
                 // middle entry in column
                 if (!BINARY_ACCESS) {
                     for (int i = minNewIndex; i < maxNewIndex; ++i) {
-                        if (row_idx[i] < row && row < row_idx[i + 1]) {
+                        if (col_idx[i] < col && col < col_idx[i + 1]) {
                             insertPosition = i + 1;
                             break;
                         }
@@ -280,31 +280,31 @@ public class CcsMatrix extends Matrix {
                     // binary search: row_idx is in the right order
                     while (insertPosition == -1) {
                         int i = (maxNewIndex - minNewIndex) / 2 + minNewIndex;
-                        if (row_idx[i] < row && row < row_idx[i + 1]) {
+                        if (col_idx[i] < col && col < col_idx[i + 1]) {
                             insertPosition = i + 1;
-                        } else if (row_idx[i] < row) {
+                        } else if (col_idx[i] < col) {
                             minNewIndex = i;
-                        } else if (row_idx[i + 1] > row) {
+                        } else if (col_idx[i + 1] > col) {
                             maxNewIndex = i;
                         } else {
                             throw new IllegalStateException(
-                                    "WRONG ORDER IN row_idx!");
+                                    "WRONG ORDER IN col_idx!");
                         }
                     }
                 }
             }
 
-            for (int i = col + 1; i < this.getCols() + 1; ++i) {
-                col_ptr[i]++;
+            for (int i = row + 1; i < this.getRows() + 1; ++i) {
+                row_ptr[i]++;
             }
 
             this.val = ArrayHelper.shift(this.val, insertPosition,
                     nextValIndex + 1, false, true);
-            this.row_idx = ArrayHelper.shift(this.row_idx, insertPosition,
+            this.col_idx = ArrayHelper.shift(this.col_idx, insertPosition,
                     nextValIndex + 1, false, true);
 
             this.val[insertPosition] = val;
-            row_idx[insertPosition] = row;
+            col_idx[insertPosition] = col;
 
             nextValIndex++;
         } else if (position != NO_POSITION && val == DEFAULT_VALUE) {
@@ -328,11 +328,11 @@ public class CcsMatrix extends Matrix {
         if (position != NO_POSITION) {
             this.val = ArrayHelper.shift(this.val, position, nextValIndex,
                     false, false);
-            this.row_idx = ArrayHelper.shift(this.row_idx, position,
+            this.col_idx = ArrayHelper.shift(this.col_idx, position,
                     nextValIndex, false, false);
             nextValIndex--;
-            for (int i = col + 1; i < this.getCols() + 1; ++i) {
-                col_ptr[i]--;
+            for (int i = row + 1; i < this.getRows() + 1; ++i) {
+                row_ptr[i]--;
             }
         }
     }
@@ -351,8 +351,8 @@ public class CcsMatrix extends Matrix {
         System.out.println("---STATUS---");
         System.out.println("LENGTH:\t\t " + nextValIndex);
         System.out.println("RESERVED SPACE:\t " + val.length);
-        System.out.println("COL_PTR:\t " + ArrayHelper.toString(col_ptr));
-        System.out.println("ROW_IDX:\t " + ArrayHelper.toString(row_idx));
+        System.out.println("COL_PTR:\t " + ArrayHelper.toString(row_ptr));
+        System.out.println("ROW_IDX:\t " + ArrayHelper.toString(col_idx));
         System.out.println("VALS:\t\t " + ArrayHelper.toString(this.val));
     }
 
@@ -362,7 +362,7 @@ public class CcsMatrix extends Matrix {
             throw new IllegalArgumentException();
         }
 
-        CcsMatrix result = new CcsMatrix(this.getRows(), matrix.getCols(),
+        CrsMatrix result = new CrsMatrix(this.getRows(), matrix.getCols(),
                 this.getRows() + matrix.getCols());
 
         multThisWithInto(matrix, result, WRITE_BY_ROW);
@@ -376,22 +376,22 @@ public class CcsMatrix extends Matrix {
             throw new IllegalArgumentException();
         }
 
-        CcsMatrix[] matrices = new CcsMatrix[NUMBER_OF_THREADS];
+        CrsMatrix[] matrices = new CrsMatrix[NUMBER_OF_THREADS];
         for (int i = 0; i < NUMBER_OF_THREADS; ++i) {
-            matrices[i] = new CcsMatrix(this.getRows(), matrix.getCols(),
+            matrices[i] = new CrsMatrix(this.getRows(), matrix.getCols(),
                     this.getRows() + matrix.getCols());
         }
 
         prlMultThisWithInto(matrix, matrices, NUMBER_OF_THREADS, WRITE_BY_ROW);
 
-        CcsMatrix result = new CcsMatrix(matrices);
+        CrsMatrix result = new CrsMatrix(matrices);
 
         return result;
     }
 
     @Override
     public Matrix getNewInstance(int rows, int cols) {
-        return new CcsMatrix(rows, cols);
+        return new CrsMatrix(rows, cols);
     }
 
     @Override
@@ -407,7 +407,7 @@ public class CcsMatrix extends Matrix {
             col2 = temp;
         }
 
-        CcsMatrix result = new CcsMatrix(row2 - row1 + 1, col2 - col1 + 1);
+        CrsMatrix result = new CrsMatrix(row2 - row1 + 1, col2 - col1 + 1);
 
         if (row1 < 0 || col1 < 0 || row2 < 0 || col2 < 0
                 || col1 >= this.getCols() || row1 >= this.getRows()) {
@@ -419,17 +419,17 @@ public class CcsMatrix extends Matrix {
         col2 = Math.min(this.getCols() - 1, col2);
 
         int entryCount = 0;
-        for (int col = col1; col <= col2; ++col) {
-            result.col_ptr[col - col1] = entryCount;
-            for (int index = col_ptr[col]; index < col_ptr[col + 1]; ++index) {
-                if (row1 <= row_idx[index] && row_idx[index] <= row2
+        for (int row = row1; row <= row2; ++row) {
+            result.row_ptr[row - row1] = entryCount;
+            for (int index = row_ptr[row]; index < row_ptr[row + 1]; ++index) {
+                if (col1 <= col_idx[index] && col_idx[index] <= col2
                         && val[index] != DEFAULT_VALUE) {
-                    result.setLastEntryAt(val[index], row_idx[index] - row1);
+                    result.setLastEntryAt(val[index], col_idx[index] - col1);
                     entryCount++;
                 }
             }
         }
-        result.col_ptr[col2 - col1 + 1] = entryCount;
+        result.row_ptr[row2 - row1 + 1] = entryCount;
 
         return result;
     }
@@ -446,20 +446,20 @@ public class CcsMatrix extends Matrix {
 
     private void addSub(Matrix mat, boolean add) {
         if (hasSameDimensions(mat)) {
-            CcsMatrix temp = new CcsMatrix(this.getRows(), this.getCols());
+            CrsMatrix temp = new CrsMatrix(this.getRows(), this.getCols());
 
             int entryCount = 0;
             double val;
             int nextEntryIndex;
 
-            for (int col = 0; col < this.getCols(); ++col) {
-                temp.col_ptr[col] = entryCount;
-                nextEntryIndex = nextEntryIndexForColumn(col,
-                        this.col_ptr[col] - 1);
-                for (int row = 0; row < this.getRows(); ++row) {
-                    if (nextEntryIndex != -1 && row_idx[nextEntryIndex] == row) {
+            for (int row = 0; row < this.getRows(); ++row) {
+                temp.row_ptr[row] = entryCount;
+                nextEntryIndex = nextEntryIndexForColumn(row,
+                        this.row_ptr[row] - 1);
+                for (int col = 0; col < this.getCols(); ++col) {
+                    if (nextEntryIndex != -1 && col_idx[nextEntryIndex] == col) {
                         val = this.val[nextEntryIndex];
-                        nextEntryIndex = nextEntryIndexForColumn(col,
+                        nextEntryIndex = nextEntryIndexForColumn(row,
                                 nextEntryIndex);
                     } else {
                         val = 0;
@@ -468,23 +468,23 @@ public class CcsMatrix extends Matrix {
                     if (add) {
                         val += mat.get(row, col);
                         if (val != DEFAULT_VALUE) {
-                            temp.setLastEntryAt(val, row);
+                            temp.setLastEntryAt(val, col);
                             entryCount++;
                         }
                     } else {
                         val -= mat.get(row, col);
                         if (val != DEFAULT_VALUE) {
-                            temp.setLastEntryAt(val, row);
+                            temp.setLastEntryAt(val, col);
                             entryCount++;
                         }
                     }
                 }
             }
-            temp.col_ptr[temp.getCols()] = entryCount;
+            temp.row_ptr[temp.getRows()] = entryCount;
 
-            this.col_ptr = temp.col_ptr;
+            this.row_ptr = temp.row_ptr;
             this.val = temp.val;
-            this.row_idx = temp.row_idx;
+            this.col_idx = temp.col_idx;
             this.size = temp.size;
             this.nextValIndex = temp.nextValIndex;
         } else {
@@ -492,9 +492,9 @@ public class CcsMatrix extends Matrix {
         }
     }
 
-    private int nextEntryIndexForColumn(int col, int entryIndex) {
+    private int nextEntryIndexForColumn(int row, int entryIndex) {
         int idx = entryIndex + 1;
-        if (idx < col_ptr[col + 1]) {
+        if (idx < row_ptr[row + 1]) {
             return idx;
         } else {
             return -1;
@@ -503,10 +503,10 @@ public class CcsMatrix extends Matrix {
 
     @Override
     public Matrix clone() {
-        CcsMatrix clone = new CcsMatrix(rows, cols, Math.max(size, 1));
+        CrsMatrix clone = new CrsMatrix(rows, cols, Math.max(size, 1));
 
-        clone.col_ptr = Arrays.copyOf(this.col_ptr, this.col_ptr.length);
-        clone.row_idx = Arrays.copyOf(this.row_idx, this.row_idx.length);
+        clone.row_ptr = Arrays.copyOf(this.row_ptr, this.row_ptr.length);
+        clone.col_idx = Arrays.copyOf(this.col_idx, this.col_idx.length);
         clone.val = Arrays.copyOf(this.val, this.val.length);
 
         clone.nextValIndex = this.nextValIndex;
@@ -520,39 +520,39 @@ public class CcsMatrix extends Matrix {
         if (!poolPossible(upLeft, upRight, downLeft, downRight)) {
             throw new IllegalArgumentException();
         }
-        CcsMatrix c11 = (CcsMatrix) upLeft;
-        CcsMatrix c12 = (CcsMatrix) upRight;
-        CcsMatrix c21 = (CcsMatrix) downLeft;
-        CcsMatrix c22 = (CcsMatrix) downRight;
+        CrsMatrix c11 = (CrsMatrix) upLeft;
+        CrsMatrix c12 = (CrsMatrix) upRight;
+        CrsMatrix c21 = (CrsMatrix) downLeft;
+        CrsMatrix c22 = (CrsMatrix) downRight;
 
-        int halfSize = upLeft.getRows();
+        int halfSize = upLeft.getCols();
 
         size = c11.size + c12.size + c21.size + c22.size;
-        initArraysWithSize(size, getCols());
+        initArraysWithSize(size, getRows());
         nextValIndex = 0;
         int entryCount = 0;
 
-        for (int col = 0; col < Math.min(halfSize, getCols()); ++col) {
-            col_ptr[col] = entryCount;
-            entryCount = copyColFrom(c11, entryCount, col, 0, 0);
-            entryCount = copyColFrom(c21, entryCount, col, halfSize, 0);
+        for (int row = 0; row < Math.min(halfSize, getRows()); ++row) {
+            row_ptr[row] = entryCount;
+            entryCount = copyRowFrom(c11, entryCount, row, 0, 0);
+            entryCount = copyRowFrom(c12, entryCount, row, halfSize, 0);
         }
-        for (int col = halfSize; col < getCols(); ++col) {
-            col_ptr[col] = entryCount;
-            entryCount = copyColFrom(c12, entryCount, col, 0, halfSize);
-            entryCount = copyColFrom(c22, entryCount, col, halfSize, halfSize);
+        for (int row = halfSize; row < getRows(); ++row) {
+            row_ptr[row] = entryCount;
+            entryCount = copyRowFrom(c21, entryCount, row, 0, halfSize);
+            entryCount = copyRowFrom(c22, entryCount, row, halfSize, halfSize);
         }
 
-        col_ptr[getCols()] = entryCount;
+        row_ptr[getRows()] = entryCount;
     }
 
-    private int copyColFrom(CcsMatrix mat, int entryCount, int col,
-            int rowShift, int colShift) {
-        for (int index = mat.col_ptr[col - colShift]; index < mat.col_ptr[col
-                + 1 - colShift]; ++index) {
-            int row = mat.row_idx[index] + rowShift;
-            if (row < getRows()) {
-                setLastEntryAt(mat.val[index], row);
+    private int copyRowFrom(CrsMatrix mat, int entryCount, int row,
+            int colShift, int rowShift) {
+        for (int index = mat.row_ptr[row - rowShift]; index < mat.row_ptr[row
+                + 1 - rowShift]; ++index) {
+            int col = mat.col_idx[index] + colShift;
+            if (col < getCols()) {
+                setLastEntryAt(mat.val[index], col);
                 entryCount++;
             }
         }
@@ -561,7 +561,7 @@ public class CcsMatrix extends Matrix {
 
     @Override
     public Matrix strassenMultThisWith(Matrix matrix) {
-        CcsMatrix result = new CcsMatrix(this.getRows(), matrix.getCols(),
+        CrsMatrix result = new CrsMatrix(this.getRows(), matrix.getCols(),
                 this.getRows() + matrix.getCols());
 
         strassenMultThisWithInto(matrix, result, WRITE_BY_ROW);
@@ -571,7 +571,7 @@ public class CcsMatrix extends Matrix {
 
     @Override
     public Matrix prlStrassenMultThisWith(Matrix matrix) {
-        CcsMatrix result = new CcsMatrix(this.getRows(), matrix.getCols(),
+        CrsMatrix result = new CrsMatrix(this.getRows(), matrix.getCols(),
                 this.getRows() + matrix.getCols());
 
         prlStrassenMultThisWithInto(matrix, result, WRITE_BY_ROW);
@@ -581,7 +581,7 @@ public class CcsMatrix extends Matrix {
 
     @Override
     public Matrix winogradMultThisWith(Matrix matrix) {
-        CcsMatrix result = new CcsMatrix(this.getRows(), matrix.getCols(),
+        CrsMatrix result = new CrsMatrix(this.getRows(), matrix.getCols(),
                 this.getRows() + matrix.getCols());
 
         winogradMultThisWithInto(matrix, result, WRITE_BY_ROW);
@@ -626,43 +626,43 @@ public class CcsMatrix extends Matrix {
     }
 
     @Override
-    public void stabilizeRowsTo(double stabilizeRowsTo) {
-        double[] rowSums = new double[getRows()];
+    public void stabilizeColsTo(double stabilizeColsTo) {
+        double[] colSums = new double[getCols()];
 
-        for (int col = 0; col < getCols(); ++col) {
-            for (int colIndex = col_ptr[col]; colIndex < col_ptr[col + 1]; ++colIndex) {
-                rowSums[row_idx[colIndex]] += val[colIndex];
+        for (int row = 0; row < rows; ++row) {
+            for (int rowIndex = row_ptr[row]; rowIndex < row_ptr[row + 1]; ++rowIndex) {
+                colSums[col_idx[rowIndex]] += val[rowIndex];
             }
         }
 
-        for (int row = 0; row < getRows(); ++row) {
-            if (rowSums[row] == 0) {
-                rowSums[row] = 1;
+        for (int col = 0; col < cols; ++col) {
+            if (colSums[col] == 0) {
+                colSums[col] = 1;
             }
         }
 
-        for (int col = 0; col < getCols(); ++col) {
-            for (int colIndex = col_ptr[col]; colIndex < col_ptr[col + 1]; ++colIndex) {
-                val[colIndex] *= stabilizeRowsTo / rowSums[row_idx[colIndex]];
+        for (int row = 0; row < rows; ++row) {
+            for (int rowIndex = row_ptr[row]; rowIndex < row_ptr[row + 1]; ++rowIndex) {
+                val[rowIndex] *= stabilizeColsTo / colSums[col_idx[rowIndex]];
             }
         }
     }
 
     @Override
-    public void stabilizeColsTo(double stabilizeColsTo) {
-        double colSum;
-        for (int col = 0; col < cols; ++col) {
-            colSum = 0;
-            for (int rowIndex = col_ptr[col]; rowIndex < col_ptr[col + 1]; ++rowIndex) {
-                colSum += val[rowIndex];
+    public void stabilizeRowsTo(double stabilizeRowsTo) {
+        double rowSum;
+        for (int row = 0; row < rows; ++row) {
+            rowSum = 0;
+            for (int colIndex = row_ptr[row]; colIndex < row_ptr[row + 1]; ++colIndex) {
+                rowSum += val[colIndex];
             }
 
-            if (colSum == 0) {
-                colSum = 1;
+            if (rowSum == 0) {
+                rowSum = 1;
             }
 
-            for (int rowIndex = col_ptr[col]; rowIndex < col_ptr[col + 1]; ++rowIndex) {
-                val[rowIndex] *= stabilizeColsTo / colSum;
+            for (int colIndex = row_ptr[row]; colIndex < row_ptr[row + 1]; ++colIndex) {
+                val[colIndex] *= stabilizeRowsTo / rowSum;
             }
         }
     }
