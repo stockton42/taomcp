@@ -122,9 +122,10 @@ public class MultTest {
                 System.out.println(matrixStorageTypeIds.get(matrixStorageType)
                         + "_MATRIX_TIME:\t " + time
                         + " ms\t IS NON-NEGATIVE:\t " + result.isNonNegative());
-                if (printResultMatrix) {
+                if (printResultMatrix)
                     System.out.println(result);
-                }
+                if (setNegativeEntriesToZero)
+                    System.out.println();
 
                 // check if all storage types get the same result
                 Matrix oldResult = results.get(multType);

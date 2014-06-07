@@ -27,12 +27,12 @@ public class RcsMatrix extends Matrix {
 
     @Override
     protected Matrix multWith(Matrix matrix) {
-        return getCcsMatrix(matrix).multWith(content);
+        return new RcsMatrix(getCcsMatrix(matrix.clone()).multWith(content));
     }
 
     @Override
     protected Matrix prlMultWith(Matrix matrix) {
-        return getCcsMatrix(matrix).prlMultWith(content);
+        return new RcsMatrix(getCcsMatrix(matrix.clone()).prlMultWith(content));
     }
 
     @Override
@@ -70,7 +70,7 @@ public class RcsMatrix extends Matrix {
 
     @Override
     public Matrix getNewInstance(int rows, int cols) {
-        return content.getNewInstance(cols, rows);
+        return new RcsMatrix(content.getNewInstance(cols, rows));
     }
 
     @Override
@@ -85,7 +85,7 @@ public class RcsMatrix extends Matrix {
 
     @Override
     public void add(Matrix mat) {
-        content.add(getCcsMatrix(mat));
+        content.add(mat);
     }
 
     @Override
@@ -95,12 +95,13 @@ public class RcsMatrix extends Matrix {
 
     @Override
     public void sub(Matrix mat) {
-        content.sub(getCcsMatrix(mat));
+        content.sub(mat);
     }
 
     @Override
     protected Matrix strassenMultThisWith(Matrix matrix) {
-        return getCcsMatrix(matrix).strassenMultThisWith(content);
+        return new RcsMatrix(getCcsMatrix(matrix.clone()).strassenMultThisWith(
+                content));
     }
 
     @Override
@@ -116,14 +117,19 @@ public class RcsMatrix extends Matrix {
 
     @Override
     protected Matrix prlStrassenMultThisWith(Matrix matrix) {
-        return getCcsMatrix(matrix).prlStrassenMultThisWith(content);
+        return new RcsMatrix(getCcsMatrix(matrix.clone())
+                .prlStrassenMultThisWith(content));
     }
 
     @Override
     protected Matrix winogradMultThisWith(Matrix matrix) {
-        return getCcsMatrix(matrix).winogradMultThisWith(content);
+        return new RcsMatrix(getCcsMatrix(matrix.clone()).winogradMultThisWith(
+                content));
     }
 
+    /**
+     * Only works if norm(A) == norm(transpose(A)).
+     */
     @Override
     public double getNorm(MatrixNorm norm) {
         return content.getNorm(norm);
