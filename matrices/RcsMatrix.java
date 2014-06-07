@@ -5,7 +5,7 @@ public class RcsMatrix extends Matrix {
     private CcsMatrix content;
 
     private RcsMatrix(Matrix matrix) {
-        this.content = getCcsMatrix(matrix);
+        this.content = (CcsMatrix) matrix;
     }
 
     public RcsMatrix(int rows, int cols, int size) {
@@ -13,8 +13,8 @@ public class RcsMatrix extends Matrix {
     }
 
     private CcsMatrix getCcsMatrix(Matrix matrix) {
-        if (matrix instanceof CcsMatrix) {
-            return (CcsMatrix) matrix;
+        if (matrix instanceof RcsMatrix) {
+            return ((RcsMatrix) matrix).content;
         } else {
             throw new IllegalArgumentException();
         }
@@ -23,16 +23,6 @@ public class RcsMatrix extends Matrix {
     @Override
     public Matrix clone() {
         return new RcsMatrix(content.clone());
-    }
-
-    @Override
-    protected Matrix multWith(Matrix matrix) {
-        return new RcsMatrix(getCcsMatrix(matrix.clone()).multWith(content));
-    }
-
-    @Override
-    protected Matrix prlMultWith(Matrix matrix) {
-        return new RcsMatrix(getCcsMatrix(matrix.clone()).prlMultWith(content));
     }
 
     @Override
@@ -85,7 +75,7 @@ public class RcsMatrix extends Matrix {
 
     @Override
     public void add(Matrix mat) {
-        content.add(mat);
+        content.add(getCcsMatrix(mat));
     }
 
     @Override
@@ -95,24 +85,23 @@ public class RcsMatrix extends Matrix {
 
     @Override
     public void sub(Matrix mat) {
-        content.sub(mat);
+        content.sub(getCcsMatrix(mat));
+    }
+
+    @Override
+    protected Matrix multWith(Matrix matrix) {
+        return new RcsMatrix(getCcsMatrix(matrix.clone()).multWith(content));
+    }
+
+    @Override
+    protected Matrix prlMultWith(Matrix matrix) {
+        return new RcsMatrix(getCcsMatrix(matrix.clone()).prlMultWith(content));
     }
 
     @Override
     protected Matrix strassenMultThisWith(Matrix matrix) {
         return new RcsMatrix(getCcsMatrix(matrix.clone()).strassenMultThisWith(
                 content));
-    }
-
-    @Override
-    protected void pool(Matrix upLeft, Matrix upRight, Matrix downLeft,
-            Matrix downRight) {
-        CcsMatrix upLeftCcs = getCcsMatrix(upLeft);
-        CcsMatrix upRightCcs = getCcsMatrix(upRight);
-        CcsMatrix downLeftCcs = getCcsMatrix(downLeft);
-        CcsMatrix downRightCcs = getCcsMatrix(downRight);
-
-        content.pool(upLeftCcs, upRightCcs, downLeftCcs, downRightCcs);
     }
 
     @Override
@@ -125,6 +114,17 @@ public class RcsMatrix extends Matrix {
     protected Matrix winogradMultThisWith(Matrix matrix) {
         return new RcsMatrix(getCcsMatrix(matrix.clone()).winogradMultThisWith(
                 content));
+    }
+
+    @Override
+    protected void pool(Matrix upLeft, Matrix upRight, Matrix downLeft,
+            Matrix downRight) {
+        CcsMatrix upLeftCcs = getCcsMatrix(upLeft);
+        CcsMatrix upRightCcs = getCcsMatrix(upRight);
+        CcsMatrix downLeftCcs = getCcsMatrix(downLeft);
+        CcsMatrix downRightCcs = getCcsMatrix(downRight);
+
+        content.pool(upLeftCcs, upRightCcs, downLeftCcs, downRightCcs);
     }
 
     /**

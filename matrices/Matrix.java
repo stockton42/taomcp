@@ -419,11 +419,11 @@ public abstract class Matrix {
                 if (this.get(r, c) != mat.get(r, c)) {
 
                     if (SHOW_MATRICES_WHEN_NOT_EQUAL) {
-                        System.err.println("\n" + this);
+                        // System.err.println("\n" + this);
                         System.err.println("\nERROR AT ENTRY (" + r + ", " + c
                                 + "): " + this.get(r, c) + " VS "
                                 + mat.get(r, c) + "\n");
-                        System.err.println(mat);
+                        // System.err.println(mat);
                     }
 
                     return false;
