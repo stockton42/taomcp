@@ -155,8 +155,10 @@ public class CcsMatrix extends Matrix {
         System.out.println(test);
         test.del(2, 1);
         test.printStatus();
+        System.out.println(test);
         test.del(1, 2);
         test.printStatus();
+        System.out.println(test);
         test.del(0, 0);
         test.printStatus();
         System.out.println(test);
@@ -324,10 +326,10 @@ public class CcsMatrix extends Matrix {
 
         int position = getPosition(row, col);
         if (position != NO_POSITION) {
-            this.val = ArrayHelper.shift(this.val, position, nextValIndex + 1,
+            this.val = ArrayHelper.shift(this.val, position, nextValIndex,
                     false, false);
             this.row_idx = ArrayHelper.shift(this.row_idx, position,
-                    nextValIndex + 1, false, false);
+                    nextValIndex, false, false);
             nextValIndex--;
             for (int i = col + 1; i < this.getCols() + 1; ++i) {
                 col_ptr[i]--;
