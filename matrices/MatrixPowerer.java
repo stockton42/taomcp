@@ -14,7 +14,7 @@ public class MatrixPowerer {
 
         Matrix test = new ArrayMatrix(arr, false);
 
-        test = new SparseMatrix(test);
+        test = new CcsMatrix(test);
         // test = new MapMatrix(test);
 
         System.out.println(test + "\n");

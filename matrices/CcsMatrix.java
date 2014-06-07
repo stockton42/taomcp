@@ -12,7 +12,7 @@ import tools.ArrayHelper;
  * 
  * @author Michael Stock
  */
-public class SparseMatrix extends Matrix {
+public class CcsMatrix extends Matrix {
 
     private int rows;
     private int cols;
@@ -34,11 +34,11 @@ public class SparseMatrix extends Matrix {
     // increases speed when the matrix is not too sparse
     private static final boolean BINARY_ACCESS = true;
 
-    public SparseMatrix(int rows, int cols, int initNumberOfVals) {
+    public CcsMatrix(int rows, int cols, int initNumberOfVals) {
         initWith(rows, cols, initNumberOfVals);
     }
 
-    public SparseMatrix(int rows, int cols) {
+    public CcsMatrix(int rows, int cols) {
         initWith(rows, cols, rows + cols);
     }
 
@@ -59,7 +59,7 @@ public class SparseMatrix extends Matrix {
         col_ptr = new int[cols + 1];
     }
 
-    public SparseMatrix(Matrix mat) {
+    public CcsMatrix(Matrix mat) {
         this.rows = mat.getRows();
         this.cols = mat.getCols();
         nextValIndex = 0;
@@ -79,7 +79,7 @@ public class SparseMatrix extends Matrix {
         this.col_ptr[cols] = entryCount;
     }
 
-    private SparseMatrix(SparseMatrix[] matrices) {
+    private CcsMatrix(CcsMatrix[] matrices) {
         this.rows = matrices[0].rows;
         this.cols = matrices[0].cols;
         size = 0;
@@ -123,7 +123,7 @@ public class SparseMatrix extends Matrix {
                     (int) (Math.random() * rows), (int) (Math.random() * cols));
         }
 
-        SparseMatrix sm = new SparseMatrix(am);
+        CcsMatrix sm = new CcsMatrix(am);
         if (!sm.equals(am)) {
             throw new IllegalStateException("MATRICES ARE NOT EQUAL!");
         }
@@ -144,7 +144,7 @@ public class SparseMatrix extends Matrix {
     }
 
     public static void delTest() {
-        SparseMatrix test = new SparseMatrix(3, 3, 2);
+        CcsMatrix test = new CcsMatrix(3, 3, 2);
         test.printStatus();
         test.put(1, 0, 0);
         test.printStatus();
@@ -360,8 +360,8 @@ public class SparseMatrix extends Matrix {
             throw new IllegalArgumentException();
         }
 
-        SparseMatrix result = new SparseMatrix(this.getRows(),
-                matrix.getCols(), this.getRows() + matrix.getCols());
+        CcsMatrix result = new CcsMatrix(this.getRows(), matrix.getCols(),
+                this.getRows() + matrix.getCols());
 
         multThisWithInto(matrix, result, WRITE_BY_ROW);
 
@@ -374,22 +374,22 @@ public class SparseMatrix extends Matrix {
             throw new IllegalArgumentException();
         }
 
-        SparseMatrix[] matrices = new SparseMatrix[NUMBER_OF_THREADS];
+        CcsMatrix[] matrices = new CcsMatrix[NUMBER_OF_THREADS];
         for (int i = 0; i < NUMBER_OF_THREADS; ++i) {
-            matrices[i] = new SparseMatrix(this.getRows(), matrix.getCols(),
+            matrices[i] = new CcsMatrix(this.getRows(), matrix.getCols(),
                     this.getRows() + matrix.getCols());
         }
 
         prlMultThisWithInto(matrix, matrices, NUMBER_OF_THREADS, WRITE_BY_ROW);
 
-        SparseMatrix result = new SparseMatrix(matrices);
+        CcsMatrix result = new CcsMatrix(matrices);
 
         return result;
     }
 
     @Override
     public Matrix getNewInstance(int rows, int cols) {
-        return new SparseMatrix(rows, cols);
+        return new CcsMatrix(rows, cols);
     }
 
     @Override
@@ -405,7 +405,7 @@ public class SparseMatrix extends Matrix {
             col2 = temp;
         }
 
-        SparseMatrix result = new SparseMatrix(row2 - row1 + 1, col2 - col1 + 1);
+        CcsMatrix result = new CcsMatrix(row2 - row1 + 1, col2 - col1 + 1);
 
         if (row1 < 0 || col1 < 0 || row2 < 0 || col2 < 0
                 || col1 >= this.getCols() || row1 >= this.getRows()) {
@@ -444,7 +444,7 @@ public class SparseMatrix extends Matrix {
 
     private void addSub(Matrix mat, boolean add) {
         if (hasSameDimensions(mat)) {
-            SparseMatrix temp = new SparseMatrix(this.getRows(), this.getCols());
+            CcsMatrix temp = new CcsMatrix(this.getRows(), this.getCols());
 
             int entryCount = 0;
             double val;
@@ -501,7 +501,7 @@ public class SparseMatrix extends Matrix {
 
     @Override
     public Matrix clone() {
-        SparseMatrix clone = new SparseMatrix(rows, cols, Math.max(size, 1));
+        CcsMatrix clone = new CcsMatrix(rows, cols, Math.max(size, 1));
 
         clone.col_ptr = Arrays.copyOf(this.col_ptr, this.col_ptr.length);
         clone.row_idx = Arrays.copyOf(this.row_idx, this.row_idx.length);
@@ -518,10 +518,10 @@ public class SparseMatrix extends Matrix {
         if (!poolPossible(upLeft, upRight, downLeft, downRight)) {
             throw new IllegalArgumentException();
         }
-        SparseMatrix c11 = (SparseMatrix) upLeft;
-        SparseMatrix c12 = (SparseMatrix) upRight;
-        SparseMatrix c21 = (SparseMatrix) downLeft;
-        SparseMatrix c22 = (SparseMatrix) downRight;
+        CcsMatrix c11 = (CcsMatrix) upLeft;
+        CcsMatrix c12 = (CcsMatrix) upRight;
+        CcsMatrix c21 = (CcsMatrix) downLeft;
+        CcsMatrix c22 = (CcsMatrix) downRight;
 
         int halfSize = upLeft.getRows();
 
@@ -544,7 +544,7 @@ public class SparseMatrix extends Matrix {
         col_ptr[getCols()] = entryCount;
     }
 
-    private int copyColFrom(SparseMatrix mat, int entryCount, int col,
+    private int copyColFrom(CcsMatrix mat, int entryCount, int col,
             int rowShift, int colShift) {
         for (int index = mat.col_ptr[col - colShift]; index < mat.col_ptr[col
                 + 1 - colShift]; ++index) {
@@ -559,8 +559,8 @@ public class SparseMatrix extends Matrix {
 
     @Override
     public Matrix strassenMultThisWith(Matrix matrix) {
-        SparseMatrix result = new SparseMatrix(this.getRows(),
-                matrix.getCols(), this.getRows() + matrix.getCols());
+        CcsMatrix result = new CcsMatrix(this.getRows(), matrix.getCols(),
+                this.getRows() + matrix.getCols());
 
         strassenMultThisWithInto(matrix, result, WRITE_BY_ROW);
 
@@ -569,8 +569,8 @@ public class SparseMatrix extends Matrix {
 
     @Override
     public Matrix prlStrassenMultThisWith(Matrix matrix) {
-        SparseMatrix result = new SparseMatrix(this.getRows(),
-                matrix.getCols(), this.getRows() + matrix.getCols());
+        CcsMatrix result = new CcsMatrix(this.getRows(), matrix.getCols(),
+                this.getRows() + matrix.getCols());
 
         prlStrassenMultThisWithInto(matrix, result, WRITE_BY_ROW);
 
@@ -579,8 +579,8 @@ public class SparseMatrix extends Matrix {
 
     @Override
     public Matrix winogradMultThisWith(Matrix matrix) {
-        SparseMatrix result = new SparseMatrix(this.getRows(),
-                matrix.getCols(), this.getRows() + matrix.getCols());
+        CcsMatrix result = new CcsMatrix(this.getRows(), matrix.getCols(),
+                this.getRows() + matrix.getCols());
 
         winogradMultThisWithInto(matrix, result, WRITE_BY_ROW);
 
@@ -642,6 +642,25 @@ public class SparseMatrix extends Matrix {
         for (int col = 0; col < getCols(); ++col) {
             for (int colIndex = col_ptr[col]; colIndex < col_ptr[col + 1]; ++colIndex) {
                 val[colIndex] *= stabilizeRowsTo / rowSums[row_idx[colIndex]];
+            }
+        }
+    }
+
+    @Override
+    public void stabilizeColsTo(double stabilizeColsTo) {
+        double colSum;
+        for (int col = 0; col < cols; ++col) {
+            colSum = 0;
+            for (int rowIndex = col_ptr[col]; rowIndex < col_ptr[col + 1]; ++rowIndex) {
+                colSum += val[rowIndex];
+            }
+
+            if (colSum == 0) {
+                colSum = 1;
+            }
+
+            for (int rowIndex = col_ptr[col]; rowIndex < col_ptr[col + 1]; ++rowIndex) {
+                val[rowIndex] *= stabilizeColsTo / colSum;
             }
         }
     }

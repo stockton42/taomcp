@@ -334,24 +334,24 @@ public class MapMatrix extends Matrix {
 
     @Override
     public void stabilizeRowsTo(double stabilizeRowsTo) {
-        double[] rowSums = new double[getRows()];
+        double rowSum;
 
         for (int row = 0; row < getRows(); row++) {
+            rowSum = 0;
             Map<Integer, Double> colMap = content.get(row);
             for (int col = 0; col < getCols(); ++col) {
                 if (colMap.containsKey(col)) {
-                    rowSums[row] += colMap.get(col);
+                    rowSum += colMap.get(col);
                 }
             }
 
-            if (rowSums[row] == 0) {
-                rowSums[row] = 1;
+            if (rowSum == 0) {
+                rowSum = 1;
             }
 
             for (int col = 0; col < getCols(); ++col) {
                 if (colMap.containsKey(col)) {
-                    colMap.put(col, colMap.get(col) * stabilizeRowsTo
-                            / rowSums[row]);
+                    colMap.put(col, colMap.get(col) * stabilizeRowsTo / rowSum);
                 }
             }
         }
@@ -394,6 +394,36 @@ public class MapMatrix extends Matrix {
         if (showModifications && minValueSetToZero < 0) {
             System.out.println("MINIMAL NEGATIVE ENTRY SET TO ZERO: "
                     + minValueSetToZero);
+        }
+    }
+
+    @Override
+    public void stabilizeColsTo(double stabilizeColsTo) {
+        double colSums[] = new double[getCols()];
+
+        for (int row = 0; row < getRows(); row++) {
+            Map<Integer, Double> colMap = content.get(row);
+            for (int col = 0; col < getCols(); ++col) {
+                if (colMap.containsKey(col)) {
+                    colSums[col] += colMap.get(col);
+                }
+            }
+        }
+
+        for (int col = 0; col < getCols(); ++col) {
+            if (colSums[col] == 0) {
+                colSums[col] = 1;
+            }
+        }
+
+        for (int row = 0; row < getRows(); row++) {
+            Map<Integer, Double> colMap = content.get(row);
+            for (int col = 0; col < getCols(); ++col) {
+                if (colMap.containsKey(col)) {
+                    colMap.put(col, colMap.get(col) * stabilizeColsTo
+                            / colSums[col]);
+                }
+            }
         }
     }
 }

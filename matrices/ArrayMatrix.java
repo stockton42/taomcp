@@ -295,19 +295,20 @@ public class ArrayMatrix extends Matrix {
 
     @Override
     public void stabilizeRowsTo(double stabilizeRowsTo) {
-        double[] rowSums = new double[getRows()];
+        double rowSum;
 
         for (int row = 0; row < getRows(); ++row) {
+            rowSum = 0;
             for (int col = 0; col < getCols(); ++col) {
-                rowSums[row] += content[row][col];
+                rowSum += content[row][col];
             }
 
-            if (rowSums[row] == 0) {
-                rowSums[row] = 1;
+            if (rowSum == 0) {
+                rowSum = 1;
             }
 
             for (int col = 0; col < getCols(); ++col) {
-                content[row][col] *= stabilizeRowsTo / rowSums[row];
+                content[row][col] *= stabilizeRowsTo / rowSum;
             }
         }
     }
@@ -342,6 +343,26 @@ public class ArrayMatrix extends Matrix {
         if (showModifications && minValueSetToZero < 0) {
             System.out.println("MINIMAL NEGATIVE ENTRY SET TO ZERO: "
                     + minValueSetToZero);
+        }
+    }
+
+    @Override
+    public void stabilizeColsTo(double stabilizeColsTo) {
+        double colSum;
+
+        for (int col = 0; col < getCols(); ++col) {
+            colSum = 0;
+            for (int row = 0; row < getRows(); ++row) {
+                colSum += content[row][col];
+            }
+
+            if (colSum == 0) {
+                colSum = 1;
+            }
+
+            for (int row = 0; row < getRows(); ++row) {
+                content[row][col] *= stabilizeColsTo / colSum;
+            }
         }
     }
 }

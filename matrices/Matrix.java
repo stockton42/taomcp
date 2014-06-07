@@ -420,9 +420,9 @@ public abstract class Matrix {
 
                     if (SHOW_MATRICES_WHEN_NOT_EQUAL) {
                         System.err.println("\n" + this);
-                        System.err.println("\nVS (" + r + ", " + c + "): "
-                                + this.get(r, c) + " VS " + mat.get(r, c)
-                                + "\n");
+                        System.err.println("\nERROR AT ENTRY (" + r + ", " + c
+                                + "): " + this.get(r, c) + " VS "
+                                + mat.get(r, c) + "\n");
                         System.err.println(mat);
                     }
 
@@ -545,4 +545,6 @@ public abstract class Matrix {
             target.put(temp, leftRow, rightCol);
         }
     }
+
+    public abstract void stabilizeColsTo(double stabilizeColsTo);
 }
