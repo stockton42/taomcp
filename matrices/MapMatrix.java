@@ -343,7 +343,7 @@ public class MapMatrix extends Matrix {
         double rowSum;
 
         for (int row = 0; row < getRows(); row++) {
-            rowSum = 0;
+            rowSum = 0.0;
             Map<Integer, Double> colMap = content.get(row);
             for (int col = 0; col < getCols(); ++col) {
                 if (colMap.containsKey(col)) {
@@ -351,13 +351,14 @@ public class MapMatrix extends Matrix {
                 }
             }
 
-            if (rowSum == 0) {
-                rowSum = 1;
+            if (rowSum == 0.0) {
+                rowSum = 1.0;
             }
 
             for (int col = 0; col < getCols(); ++col) {
                 if (colMap.containsKey(col)) {
-                    colMap.put(col, colMap.get(col) * stabilizeRowsTo / rowSum);
+                    colMap.put(col, colMap.get(col)
+                            * (stabilizeRowsTo / rowSum));
                 }
             }
         }

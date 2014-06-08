@@ -164,7 +164,7 @@ public class MultTest {
         multTypesToCalculate.add(MatrixMultType.WINOGRAD);
         multTypesToCalculate.add(MatrixMultType.STRASSEN_NAIVE_HYBRID);
         multTypesToCalculate.add(MatrixMultType.PARALLEL_STRASSEN_NAIVE_HYBRID);
-        // matrixStorageTypesToCalculate.add(0); // MAP
+        matrixStorageTypesToCalculate.add(0); // MAP
         matrixStorageTypesToCalculate.add(1); // ARRAY
         matrixStorageTypesToCalculate.add(2); // RCS
     }
