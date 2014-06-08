@@ -546,6 +546,4 @@ public abstract class Matrix {
             target.put(temp, leftRow, rightCol);
         }
     }
-
-    public abstract void stabilizeColsTo(double stabilizeColsTo);
 }

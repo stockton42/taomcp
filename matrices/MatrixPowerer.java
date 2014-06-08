@@ -104,7 +104,8 @@ public class MatrixPowerer {
 
         for (int i = 1; i <= maxPower; ++i) {
             temp = temp.multWith(temp, matMultType);
-            temp.setNegativeEntriesToZero();
+            if (setNegativeEntriesToZero)
+                temp.setNegativeEntriesToZero();
             if (stabilizeRowsTo != NO_STABILIZE)
                 temp.stabilizeRowsTo(stabilizeRowsTo);
 

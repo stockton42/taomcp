@@ -16,7 +16,7 @@ public class MapMatrix extends Matrix {
     // calculate complete rows first
     private static final boolean WRITE_BY_ROW = true;
 
-    private static final int DEFAULT_VALUE = 0;
+    private static final double DEFAULT_VALUE = 0.0;
     private static final int NUMBER_OF_THREADS = 8;
 
     private Map<Integer, Map<Integer, Double>> content;
@@ -58,12 +58,10 @@ public class MapMatrix extends Matrix {
 
         Map<Integer, Double> colMap = content.get(row);
 
-        Double entry = colMap.get(col);
-
-        if (entry == null) {
-            return DEFAULT_VALUE;
+        if (colMap.containsKey(col)) {
+            return colMap.get(col);
         } else {
-            return entry;
+            return DEFAULT_VALUE;
         }
     }
 
@@ -167,6 +165,8 @@ public class MapMatrix extends Matrix {
                 double value = this.get(row, col);
                 if (value != DEFAULT_VALUE) {
                     colMap.put(col - col1, value);
+                } else {
+                    colMap.remove(col - col1);
                 }
             }
         }
@@ -193,11 +193,15 @@ public class MapMatrix extends Matrix {
                         double value = this.get(row, col) + mat.get(row, col);
                         if (value != DEFAULT_VALUE) {
                             colMap.put(col, value);
+                        } else {
+                            colMap.remove(col);
                         }
                     } else {
                         double value = this.get(row, col) - mat.get(row, col);
                         if (value != DEFAULT_VALUE) {
                             colMap.put(col, value);
+                        } else {
+                            colMap.remove(col);
                         }
                     }
                 }
@@ -254,11 +258,13 @@ public class MapMatrix extends Matrix {
                     - rowShift);
 
             for (int col = 0; col < Math.min(halfSize, getCols()); col++) {
-                colMap.put(col, leftColMap.get(col));
+                if (leftColMap.containsKey(col))
+                    colMap.put(col, leftColMap.get(col));
             }
 
             for (int col = halfSize; col < getCols(); col++) {
-                colMap.put(col, rightColMap.get(col - halfSize));
+                if (rightColMap.containsKey(col - halfSize))
+                    colMap.put(col, rightColMap.get(col - halfSize));
             }
         }
     }
@@ -397,33 +403,35 @@ public class MapMatrix extends Matrix {
         }
     }
 
-    @Override
-    public void stabilizeColsTo(double stabilizeColsTo) {
-        double colSums[] = new double[getCols()];
-
-        for (int row = 0; row < getRows(); row++) {
-            Map<Integer, Double> colMap = content.get(row);
-            for (int col = 0; col < getCols(); ++col) {
-                if (colMap.containsKey(col)) {
-                    colSums[col] += colMap.get(col);
-                }
-            }
-        }
-
-        for (int col = 0; col < getCols(); ++col) {
-            if (colSums[col] == 0) {
-                colSums[col] = 1;
-            }
-        }
-
-        for (int row = 0; row < getRows(); row++) {
-            Map<Integer, Double> colMap = content.get(row);
-            for (int col = 0; col < getCols(); ++col) {
-                if (colMap.containsKey(col)) {
-                    colMap.put(col, colMap.get(col) * stabilizeColsTo
-                            / colSums[col]);
-                }
-            }
-        }
+    public static void main(String[] args) {
+        accessTest();
     }
+
+    public static void accessTest() {
+        int rows = 1_000;
+        int cols = 10_000;
+        double fill_percentage = 1;
+
+        int vals = (int) ((rows * cols / 100) * fill_percentage);
+        long time = System.currentTimeMillis();
+        ArrayMatrix am = new ArrayMatrix(rows, cols);
+        MapMatrix sm = new MapMatrix(rows, cols);
+        for (int j = 0; j < vals; ++j) {
+            int val = 1 + ((int) (Math.random() * vals));
+            int row = (int) (Math.random() * rows);
+            int col = (int) (Math.random() * cols);
+            am.put(val, row, col);
+            sm.put(val, row, col);
+        }
+
+        if (!sm.equals(am))
+            throw new IllegalStateException("MATRICES ARE NOT EQUAL!");
+        sm = new MapMatrix(am);
+        if (!sm.equals(am))
+            throw new IllegalStateException("MATRICES ARE NOT EQUAL!");
+
+        time = System.currentTimeMillis() - time;
+        System.out.println("SET UP: " + time + " ms");
+    }
+
 }

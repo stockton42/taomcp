@@ -345,24 +345,4 @@ public class ArrayMatrix extends Matrix {
                     + minValueSetToZero);
         }
     }
-
-    @Override
-    public void stabilizeColsTo(double stabilizeColsTo) {
-        double colSum;
-
-        for (int col = 0; col < getCols(); ++col) {
-            colSum = 0;
-            for (int row = 0; row < getRows(); ++row) {
-                colSum += content[row][col];
-            }
-
-            if (colSum == 0) {
-                colSum = 1;
-            }
-
-            for (int row = 0; row < getRows(); ++row) {
-                content[row][col] *= stabilizeColsTo / colSum;
-            }
-        }
-    }
 }

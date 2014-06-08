@@ -2,32 +2,12 @@ package tools;
 
 public class ArrayHelper {
 
-    public static int[] arrayCopy(int[] from, int length) {
-        int[] result = new int[length];
+    public static void main(String[] args) {
+        double[] toShift = { 1.0, 2.0, 3.0, 4.0, 5.0 };
 
-        for (int i = 0; i < from.length; ++i) {
-            result[i] = from[i];
-        }
-
-        return result;
+        toShift = ArrayHelper.shift(toShift, 1, 3, false, true);
+        System.out.println(toString(toShift));
     }
-
-    public static double[] arrayCopy(double[] from, int length) {
-        double[] result = new double[length];
-
-        for (int i = 0; i < from.length; ++i) {
-            result[i] = from[i];
-        }
-
-        return result;
-    }
-
-    // public static void main(String[] args) {
-    // double[] toShift = { 1.0, 2.0, 3.0, 4.0, 5.0 };
-    //
-    // toShift = shift(toShift, 1, false, false);
-    // System.out.println(toString(toShift));
-    // }
 
     public static double[] shift(double[] toShift, int startPosition,
             int targetPosition, boolean cyclic, boolean rightShift) {

@@ -25,7 +25,7 @@ public class CrsMatrix extends Matrix {
 
     private static final int ARRAY_MULT_FACTOR = 2;
     private static final int NO_POSITION = -1;
-    private static final int DEFAULT_VALUE = 0;
+    private static final double DEFAULT_VALUE = 0.0;
     private static final int NUMBER_OF_THREADS = 8;
 
     // write complete rows first in multiplication
@@ -623,29 +623,6 @@ public class CrsMatrix extends Matrix {
         }
 
         return Math.sqrt(result);
-    }
-
-    @Override
-    public void stabilizeColsTo(double stabilizeColsTo) {
-        double[] colSums = new double[getCols()];
-
-        for (int row = 0; row < rows; ++row) {
-            for (int rowIndex = row_ptr[row]; rowIndex < row_ptr[row + 1]; ++rowIndex) {
-                colSums[col_idx[rowIndex]] += val[rowIndex];
-            }
-        }
-
-        for (int col = 0; col < cols; ++col) {
-            if (colSums[col] == 0) {
-                colSums[col] = 1;
-            }
-        }
-
-        for (int row = 0; row < rows; ++row) {
-            for (int rowIndex = row_ptr[row]; rowIndex < row_ptr[row + 1]; ++rowIndex) {
-                val[rowIndex] *= stabilizeColsTo / colSums[col_idx[rowIndex]];
-            }
-        }
     }
 
     @Override
