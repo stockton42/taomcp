@@ -1,5 +1,6 @@
 package matrices;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -433,6 +434,23 @@ public class MapMatrix extends Matrix {
 
         time = System.currentTimeMillis() - time;
         System.out.println("SET UP: " + time + " ms");
+    }
+
+    @Override
+    public double getMinimalPositiveEntry() {
+        // the maximum for an entry of a stochastic matrix is 1.0
+        double minimum = 2.0;
+        for (int row = 0; row < getRows(); ++row) {
+            Map<Integer, Double> colMap = content.get(row);
+            // colMaps do never contain zero values
+            minimum = Math.min(minimum, Collections.min(colMap.values()));
+        }
+
+        if (minimum == 2.0) {
+            minimum = 0.0;
+        }
+
+        return minimum;
     }
 
 }

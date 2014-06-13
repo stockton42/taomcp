@@ -345,4 +345,18 @@ public class ArrayMatrix extends Matrix {
                     + minValueSetToZero);
         }
     }
+
+    @Override
+    public double getMinimalPositiveEntry() {
+        double minimum = 2.0;
+        for (int row = 0; row < getRows(); ++row) {
+            for (int col = 0; col < getCols(); ++col) {
+                if (content[row][col] > 0 && content[row][col] < minimum) {
+                    minimum = content[row][col];
+                }
+            }
+        }
+
+        return minimum;
+    }
 }

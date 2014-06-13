@@ -117,6 +117,8 @@ public class MultTest {
                 System.out.println(matrixStorageTypeIds.get(matrixStorageType)
                         + "_MATRIX_TIME:\t " + time
                         + " ms\t IS NON-NEGATIVE:\t " + result.isNonNegative());
+                System.out.println("\t\tMINIMAL POSITIVE ENTRY:\t"
+                        + result.getMinimalPositiveEntry());
                 if (printResultMatrix)
                     System.out.println(result);
                 if (setNegativeEntriesToZero)

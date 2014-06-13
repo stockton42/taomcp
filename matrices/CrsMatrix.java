@@ -671,4 +671,16 @@ public class CrsMatrix extends Matrix {
                     + minValueSetToZero);
         }
     }
+
+    @Override
+    public double getMinimalPositiveEntry() {
+        double minimum = 2.0;
+        for (int i = 0; i < val.length; ++i) {
+            if (minimum > val[i] && val[i] > 0) {
+                minimum = val[i];
+            }
+        }
+
+        return minimum;
+    }
 }

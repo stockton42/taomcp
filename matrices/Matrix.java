@@ -546,4 +546,14 @@ public abstract class Matrix {
             target.put(temp, leftRow, rightCol);
         }
     }
+
+    /**
+     * Returns the minimal positive entry of this matrix. If all entries are
+     * equal to zero, zero is returned. The behavior is well-defined if and only
+     * if this matrix is a stochastic matrix.
+     * 
+     * @return a positive double value if there is at least one positive entry,
+     *         zero otherwise.
+     */
+    public abstract double getMinimalPositiveEntry();
 }
