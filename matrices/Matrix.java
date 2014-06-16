@@ -104,6 +104,14 @@ public abstract class Matrix {
                 && this.getRows() == mat.getRows();
     }
 
+    /**
+     * Multiplies a matrix with another matrix using a given multiplication
+     * algorithm. The result will be returned, this matrix will NOT be modified.
+     * 
+     * @param matrix
+     * @param multType
+     * @return
+     */
     public Matrix multWith(Matrix matrix, MatrixMultType multType) {
         switch (multType) {
         case NAIVE:

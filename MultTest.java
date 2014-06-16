@@ -35,6 +35,8 @@ public class MultTest {
 
         boolean printResultMatrix = false;
         boolean printDifferences = true;
+        boolean checkConvergence = true;
+        int checkConvergenceMatrixType = 1; // ARRAY, see matrixStorageTypes
 
         int runs = 1;
         int randomNumbers1 = 100;
@@ -46,6 +48,7 @@ public class MultTest {
         int cols1 = 100;
         int rows2 = cols1;
         int cols2 = 100;
+        int initialCrsMatrixSize = 10;
 
         // set up conditions for stochastic matrices
         double rowSum = 1;
@@ -61,7 +64,7 @@ public class MultTest {
         // set up left matrix
         MapMatrix mapM1 = new MapMatrix(rows1, cols1);
         ArrayMatrix arrM1 = new ArrayMatrix(rows1, cols1);
-        CrsMatrix sprM1 = new CrsMatrix(rows1, cols1, 10);
+        CrsMatrix sprM1 = new CrsMatrix(rows1, cols1, initialCrsMatrixSize);
         fillMatrices(randomNumbers1, rows1, cols1, mapM1, arrM1, sprM1, rowSum);
 
         // set up right matrix
@@ -136,8 +139,42 @@ public class MultTest {
             System.out.println();
         }
 
-        if (printDifferences) {
+        if (printDifferences)
             printDifferences(results, printResultMatrix);
+
+        if (checkConvergence)
+            checkConvergence(results, checkConvergenceMatrixType, mapM1, arrM1,
+                    sprM1);
+    }
+
+    private static void checkConvergence(Map<MatrixMultType, Matrix> results,
+            int checkConvergenceMatrixType, MapMatrix mapM1, ArrayMatrix arrM1,
+            CrsMatrix sprM1) {
+        Matrix mat;
+        switch (checkConvergenceMatrixType) {
+        case 0:
+            mat = mapM1;
+            break;
+        case 1:
+            mat = arrM1;
+            break;
+        case 2:
+            mat = sprM1;
+            break;
+        default:
+            throw new IllegalArgumentException();
+        }
+
+        System.out
+                .println("\n---\nDIFFERENCE MAX_NORMS TO NEXT MATRIX POWER\n---\n");
+        for (MatrixMultType multType : results.keySet()) {
+            Matrix matrixPower = results.get(multType);
+            Matrix nextMatrixPower = mat.clone();
+            nextMatrixPower = nextMatrixPower.multWith(matrixPower, multType);
+            nextMatrixPower.sub(matrixPower);
+            System.out.print("FOR " + multType + ": \t");
+            System.out.println(nextMatrixPower.getNorm(MatrixNorm.MAX_NORM)
+                    + "\n");
         }
     }
 
