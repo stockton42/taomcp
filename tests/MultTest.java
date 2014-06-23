@@ -1,3 +1,5 @@
+package tests;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -19,7 +21,12 @@ public class MultTest {
     private static final Random random = new Random();
     private static final double NO_STABILIZE = MatrixPowerer.NO_STABILIZE;
 
+    public static final double MACHINE_EPSILON_BETWEEN_0_AND_1 = calculateMachineEpsilon(false);
+
     public static void main(String[] args) {
+        System.out.println("MACHINE EPSILON:\t "
+                + MACHINE_EPSILON_BETWEEN_0_AND_1);
+
         Map<Integer, String> matrixStorageTypeIds = setUpStringMaps();
 
         List<MatrixMultType> multTypesToCalculate = new LinkedList<MatrixMultType>();
@@ -145,6 +152,21 @@ public class MultTest {
         if (checkConvergence)
             checkConvergence(results, checkConvergenceMatrixType, mapM1, arrM1,
                     sprM1);
+
+        System.out.println("\n---\nMACHINE EPSILON\n---\n\n"
+                + MACHINE_EPSILON_BETWEEN_0_AND_1);
+    }
+
+    private static double calculateMachineEpsilon(boolean print) {
+        double epsilon = 0.0;
+        // go until 1.0 <= 1.0000... < 1.1
+        for (double num = 0.0; num < 1.1; num += .1) {
+            double calcEpsilon = Math.ulp(num);
+            if (print)
+                System.out.println("Epsilon(" + num + ") = " + calcEpsilon);
+            epsilon = Math.max(calcEpsilon, epsilon);
+        }
+        return epsilon;
     }
 
     private static void checkConvergence(Map<MatrixMultType, Matrix> results,

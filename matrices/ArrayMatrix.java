@@ -307,6 +307,11 @@ public class ArrayMatrix extends Matrix {
                 rowSum = 1;
             }
 
+            // double factor = 1 - (stabilizeRowsTo / rowSum);
+            // if (factor != 0.0) {
+            // System.out.println("FACTOR:\t" + factor);
+            // }
+
             for (int col = 0; col < getCols(); ++col) {
                 content[row][col] *= stabilizeRowsTo / rowSum;
             }
