@@ -23,6 +23,9 @@ public class MultTest {
 
     public static final double MACHINE_EPSILON_BETWEEN_0_AND_1 = calculateMachineEpsilon(false);
 
+    private static final double[][][] matrices = { { { 0, 0, 0.5, 0.5 },
+            { 1.0, 0, 0, 0 }, { 0.333, 0.333, 0.333, 0 }, { 0, 0, 1.0, 0 } } };
+
     public static void main(String[] args) {
         System.out.println("MACHINE EPSILON:\t "
                 + MACHINE_EPSILON_BETWEEN_0_AND_1);
@@ -40,21 +43,23 @@ public class MultTest {
         boolean mode = true;
         boolean useLogPower = true;
 
-        boolean printResultMatrix = false;
+        boolean printResultMatrix = true;
         boolean printDifferences = true;
         boolean checkConvergence = true;
         int checkConvergenceMatrixType = 1; // ARRAY, see matrixStorageTypes
 
+        // use non-positive numbers for access to matrices[][][]
+        int randomNumbers1 = 0;
+        int randomNumbers2 = 0;
+
         int runs = 1;
-        int randomNumbers1 = 100;
-        int randomNumbers2 = 100;
         int exponent = 10_000;
 
         // set up the dimensions of the matrices
-        int rows1 = 100;
-        int cols1 = 100;
+        int rows1 = 4;
+        int cols1 = 4;
         int rows2 = cols1;
-        int cols2 = 100;
+        int cols2 = 4;
         int initialCrsMatrixSize = 10;
 
         // set up conditions for stochastic matrices
@@ -72,13 +77,13 @@ public class MultTest {
         MapMatrix mapM1 = new MapMatrix(rows1, cols1);
         ArrayMatrix arrM1 = new ArrayMatrix(rows1, cols1);
         CrsMatrix sprM1 = new CrsMatrix(rows1, cols1, initialCrsMatrixSize);
-        fillMatrices(randomNumbers1, rows1, cols1, mapM1, arrM1, sprM1, rowSum);
+        fillMatrices(randomNumbers1, mapM1, arrM1, sprM1, rowSum);
 
         // set up right matrix
         MapMatrix mapM2 = new MapMatrix(rows2, cols2);
         ArrayMatrix arrM2 = new ArrayMatrix(new double[rows2][cols2], false);
         CrsMatrix sprM2 = new CrsMatrix(rows2, cols2, 10);
-        fillMatrices(randomNumbers2, rows2, cols2, mapM2, arrM2, sprM2, rowSum);
+        fillMatrices(randomNumbers2, mapM1, arrM1, sprM1, rowSum);
 
         printExperimentInformation(mode, exponent, useLogPower,
                 setNegativeEntriesToZero, arrM1, arrM2);
@@ -278,16 +283,26 @@ public class MultTest {
         }
     }
 
-    public static void fillMatrices(int randomNumbers, int rows, int cols,
-            MapMatrix mapMat, ArrayMatrix arrMat, CrsMatrix sprMat,
-            double rowSum) {
+    public static void fillMatrices(int randomNumbers, MapMatrix mapMat,
+            ArrayMatrix arrMat, CrsMatrix sprMat, double rowSum) {
+
         Matrix mat;
         for (int i = 0; i < 3; ++i) {
             if (i == 0) {
                 mat = mapMat;
-                for (int j = 0; j < randomNumbers; ++j) {
-                    mat.put((int) (random.nextDouble() * randomNumbers),
-                            random.nextInt(rows), random.nextInt(cols));
+                if (randomNumbers <= 0) {
+                    int index = -randomNumbers;
+                    for (int row = 0; row < mat.getRows(); ++row) {
+                        for (int col = 0; col < mat.getCols(); ++col) {
+                            mat.put(matrices[index][row][col], row, col);
+                        }
+                    }
+                } else {
+                    for (int j = 0; j < randomNumbers; ++j) {
+                        mat.put((int) (random.nextDouble() * randomNumbers),
+                                random.nextInt(mat.getRows()),
+                                random.nextInt(mat.getCols()));
+                    }
                 }
 
                 // check sum of all entries in a row
@@ -310,14 +325,18 @@ public class MultTest {
             }
 
             if (i > 0) {
-                for (int c = 0; c < mapMat.getCols(); ++c) {
-                    for (int r = 0; r < mapMat.getRows(); ++r) {
-                        mat.put(mapMat.get(r, c), r, c);
-                    }
-                }
+                copyMatrixFromTo(mapMat, mat);
             }
 
             // System.out.println(mat);
+        }
+    }
+
+    private static void copyMatrixFromTo(MapMatrix mapMat, Matrix mat) {
+        for (int c = 0; c < mapMat.getCols(); ++c) {
+            for (int r = 0; r < mapMat.getRows(); ++r) {
+                mat.put(mapMat.get(r, c), r, c);
+            }
         }
     }
 }
