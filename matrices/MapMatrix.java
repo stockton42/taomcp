@@ -443,7 +443,8 @@ public class MapMatrix extends Matrix {
         for (int row = 0; row < getRows(); ++row) {
             Map<Integer, Double> colMap = content.get(row);
             // colMaps do never contain zero values
-            minimum = Math.min(minimum, Collections.min(colMap.values()));
+            if (colMap.values().size() > 0)
+                minimum = Math.min(minimum, Collections.min(colMap.values()));
         }
 
         if (minimum == 2.0) {

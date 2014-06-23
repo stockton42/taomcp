@@ -58,7 +58,7 @@ public class MultTest {
         int initialCrsMatrixSize = 10;
 
         // set up conditions for stochastic matrices
-        double rowSum = 1;
+        double rowSum = 1.0;
         boolean setNegativeEntriesToZero = true;
 
         // set random number parameters
