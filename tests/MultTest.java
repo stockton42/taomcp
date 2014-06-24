@@ -21,14 +21,13 @@ public class MultTest {
     private static final Random random = new Random();
     private static final double NO_STABILIZE = MatrixPowerer.NO_STABILIZE;
 
-    public static final double MACHINE_EPSILON_BETWEEN_0_AND_1 = calculateMachineEpsilon(false);
+    public static final double MACHINE_EPSILON = Math.ulp(1.0);
 
     private static final double[][][] matrices = { { { 0, 0, 0.5, 0.5 },
             { 1.0, 0, 0, 0 }, { 0.333, 0.333, 0.333, 0 }, { 0, 0, 1.0, 0 } } };
 
     public static void main(String[] args) {
-        System.out.println("MACHINE EPSILON:\t "
-                + MACHINE_EPSILON_BETWEEN_0_AND_1);
+        System.out.println("MACHINE EPSILON:\t " + MACHINE_EPSILON);
 
         Map<Integer, String> matrixStorageTypeIds = setUpStringMaps();
 
@@ -44,7 +43,7 @@ public class MultTest {
         boolean useLogPower = true;
 
         boolean printResultMatrix = true;
-        boolean printDifferences = true;
+        boolean printDifferences = false;
         boolean checkConvergence = true;
         int checkConvergenceMatrixType = 1; // ARRAY, see matrixStorageTypes
 
@@ -53,7 +52,7 @@ public class MultTest {
         int randomNumbers2 = 0;
 
         int runs = 1;
-        int exponent = 10_000;
+        int exponent = 100; // 10_000;
 
         // set up the dimensions of the matrices
         int rows1 = 4;
@@ -158,20 +157,7 @@ public class MultTest {
             checkConvergence(results, checkConvergenceMatrixType, mapM1, arrM1,
                     sprM1);
 
-        System.out.println("\n---\nMACHINE EPSILON\n---\n\n"
-                + MACHINE_EPSILON_BETWEEN_0_AND_1);
-    }
-
-    private static double calculateMachineEpsilon(boolean print) {
-        double epsilon = 0.0;
-        // go until 1.0 <= 1.0000... < 1.1
-        for (double num = 0.0; num < 1.1; num += .1) {
-            double calcEpsilon = Math.ulp(num);
-            if (print)
-                System.out.println("Epsilon(" + num + ") = " + calcEpsilon);
-            epsilon = Math.max(calcEpsilon, epsilon);
-        }
-        return epsilon;
+        System.out.println("\n---\nMACHINE EPSILON\n---\n\n" + MACHINE_EPSILON);
     }
 
     private static void checkConvergence(Map<MatrixMultType, Matrix> results,

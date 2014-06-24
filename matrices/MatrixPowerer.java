@@ -57,12 +57,10 @@ public class MatrixPowerer {
 
         for (int i = 1; i < exponent; ++i) {
             qn = qn.multWith(argumentMatrix, matMultType);
-            if (setNegativeEntriesToZero) {
+            if (setNegativeEntriesToZero)
                 qn.setNegativeEntriesToZero();
-            }
-            if (stabilizeRowsTo != NO_STABILIZE) {
+            if (stabilizeRowsTo != NO_STABILIZE)
                 qn.stabilizeRowsTo(stabilizeRowsTo);
-            }
         }
 
         return qn;
