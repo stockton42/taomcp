@@ -21,7 +21,17 @@ public class MultTest {
     private static final Random random = new Random();
     private static final double NO_STABILIZE = MatrixPowerer.NO_STABILIZE;
 
-    public static final double MACHINE_EPSILON = Math.ulp(1.0);
+    public static final double MACHINE_EPSILON = calculateMachineEpsilon();
+
+    private static double calculateMachineEpsilon() {
+        int exponent = 0;
+
+        while (1 + Math.pow(2, -exponent) != 1) {
+            exponent++;
+        }
+
+        return Math.pow(2, -exponent);
+    }
 
     private static final double[][][] matrices = { { { 0, 0, 0.5, 0.5 },
             { 1.0, 0, 0, 0 }, { 0.333, 0.333, 0.333, 0 }, { 0, 0, 1.0, 0 } } };
@@ -43,7 +53,7 @@ public class MultTest {
         boolean useLogPower = true;
 
         boolean printResultMatrix = true;
-        boolean printDifferences = false;
+        boolean printDifferences = true;
         boolean checkConvergence = true;
         int checkConvergenceMatrixType = 1; // ARRAY, see matrixStorageTypes
 
@@ -52,7 +62,7 @@ public class MultTest {
         int randomNumbers2 = 0;
 
         int runs = 1;
-        int exponent = 100; // 10_000;
+        int exponent = 1024; // 10_000;
 
         // set up the dimensions of the matrices
         int rows1 = 4;
@@ -131,6 +141,8 @@ public class MultTest {
                 System.out.println(matrixStorageTypeIds.get(matrixStorageType)
                         + "_MATRIX_TIME:\t " + time
                         + " ms\t IS NON-NEGATIVE:\t " + result.isNonNegative());
+                System.out.println("\t\t\t\t IS POSITIVE:\t\t "
+                        + result.isPositive());
                 System.out.println("\t\tMINIMAL POSITIVE ENTRY:\t"
                         + result.getMinimalPositiveEntry());
                 if (printResultMatrix)

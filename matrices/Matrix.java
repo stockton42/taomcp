@@ -12,7 +12,7 @@ public abstract class Matrix {
     private static final DecimalFormatSymbols ds = new DecimalFormatSymbols();
     private static final DecimalFormat df;
     static {
-        df = new DecimalFormat("#0.000000", ds);
+        df = new DecimalFormat("#0.0000000000", ds);
     }
 
     /**
@@ -60,6 +60,13 @@ public abstract class Matrix {
      *         zero.
      */
     public abstract boolean isNonNegative();
+
+    /**
+     * Checks if this matrix is positive.
+     * 
+     * @return is true if every entry of this matrix is greater than zero.
+     */
+    public abstract boolean isPositive();
 
     public void setNegativeEntriesToZero() {
         setNegativeEntriesToZero(SHOW_MODIFICATIONS);

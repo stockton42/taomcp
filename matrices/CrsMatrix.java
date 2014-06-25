@@ -656,6 +656,19 @@ public class CrsMatrix extends Matrix {
     }
 
     @Override
+    public boolean isPositive() {
+        for (int row = 0; row < getRows(); ++row) {
+            for (int col = 0; col < getCols(); ++col) {
+                if (this.get(row, col) <= 0) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    @Override
     protected void setNegativeEntriesToZero(boolean showModifications) {
         double minValueSetToZero = 0.0;
         for (int index = 0; index < nextValIndex; ++index) {

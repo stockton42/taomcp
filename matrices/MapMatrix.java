@@ -381,6 +381,23 @@ public class MapMatrix extends Matrix {
     }
 
     @Override
+    public boolean isPositive() {
+        for (int row = 0; row < getRows(); ++row) {
+            Map<Integer, Double> colMap = content.get(row);
+            for (int col = 0; col < getCols(); ++col) {
+                Double value = colMap.get(col);
+                if (value != null && value <= 0) {
+                    return false;
+                } else if (value == null) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    @Override
     protected void setNegativeEntriesToZero(boolean showModifications) {
         double minValueSetToZero = 0.0;
         for (int row = 0; row < getRows(); ++row) {
