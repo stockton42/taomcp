@@ -107,6 +107,25 @@ public class CrsMatrix extends Matrix {
     public static void main(String[] args) {
         accessTest();
         delTest();
+        paperTest();
+    }
+
+    private static void paperTest() {
+        System.out.println("\n---\nPAPER TEST\n---\n");
+        CrsMatrix crs = new CrsMatrix(5, 5, 9);
+
+        crs.put(3.0, 0, 0);
+        crs.put(1.0, 0, 2);
+        crs.put(2.0, 0, 3);
+        crs.put(4.0, 1, 1);
+        crs.put(7.0, 2, 1);
+        crs.put(5.0, 2, 2);
+        crs.put(9.0, 2, 3);
+        crs.put(6.0, 4, 3);
+        crs.put(5.0, 4, 4);
+
+        System.out.println(crs);
+        crs.printStatus();
     }
 
     public static void accessTest() {
