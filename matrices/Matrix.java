@@ -12,7 +12,7 @@ public abstract class Matrix {
     private static final DecimalFormatSymbols ds = new DecimalFormatSymbols();
     private static final DecimalFormat df;
     static {
-        df = new DecimalFormat("#0.0000000000", ds);
+        df = new DecimalFormat("#0.00", ds);
     }
 
     /**

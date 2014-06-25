@@ -18,7 +18,6 @@ import matrices.MatrixPowerer;
 
 public class MultTest {
 
-    private static final Random random = new Random();
     private static final double NO_STABILIZE = MatrixPowerer.NO_STABILIZE;
 
     public static final double MACHINE_EPSILON = calculateMachineEpsilon();
@@ -52,23 +51,23 @@ public class MultTest {
         boolean mode = true;
         boolean useLogPower = true;
 
-        boolean printResultMatrix = true;
-        boolean printDifferences = true;
-        boolean checkConvergence = true;
+        boolean printResultMatrix = false;
+        boolean printDifferences = false;
+        boolean checkConvergence = false;
         int checkConvergenceMatrixType = 1; // ARRAY, see matrixStorageTypes
 
         // use non-positive numbers for access to matrices[][][]
-        int randomNumbers1 = 0;
-        int randomNumbers2 = 0;
+        int randomNumbers1 = 4000;
+        int randomNumbers2 = 4000;
 
         int runs = 1;
-        int exponent = 1024; // 10_000;
+        int exponent = 256;
 
         // set up the dimensions of the matrices
-        int rows1 = 4;
-        int cols1 = 4;
+        int rows1 = 200;
+        int cols1 = 200;
         int rows2 = cols1;
-        int cols2 = 4;
+        int cols2 = 200;
         int initialCrsMatrixSize = 10;
 
         // set up conditions for stochastic matrices
@@ -76,23 +75,23 @@ public class MultTest {
         boolean setNegativeEntriesToZero = true;
 
         // set random number parameters
-        long seed = 1354235;
-        random.setSeed(seed);
+        long seed1 = 42424242;
+        long seed2 = 1354235;
 
         printExperimentParameters(runs, randomNumbers1, randomNumbers2, rows1,
-                cols1, rows2, cols2, rowSum, seed);
+                cols1, rows2, cols2, rowSum, seed1, seed2);
 
         // set up left matrix
         MapMatrix mapM1 = new MapMatrix(rows1, cols1);
         ArrayMatrix arrM1 = new ArrayMatrix(rows1, cols1);
         CrsMatrix sprM1 = new CrsMatrix(rows1, cols1, initialCrsMatrixSize);
-        fillMatrices(randomNumbers1, mapM1, arrM1, sprM1, rowSum);
+        fillMatrices(randomNumbers1, mapM1, arrM1, sprM1, rowSum, seed1);
 
         // set up right matrix
         MapMatrix mapM2 = new MapMatrix(rows2, cols2);
-        ArrayMatrix arrM2 = new ArrayMatrix(new double[rows2][cols2], false);
+        ArrayMatrix arrM2 = new ArrayMatrix(rows2, cols2);
         CrsMatrix sprM2 = new CrsMatrix(rows2, cols2, 10);
-        fillMatrices(randomNumbers2, mapM1, arrM1, sprM1, rowSum);
+        fillMatrices(randomNumbers2, mapM2, arrM2, sprM2, rowSum, seed2);
 
         printExperimentInformation(mode, exponent, useLogPower,
                 setNegativeEntriesToZero, arrM1, arrM2);
@@ -225,10 +224,10 @@ public class MultTest {
             Set<Integer> matrixStorageTypesToCalculate) {
         multTypesToCalculate.add(MatrixMultType.NAIVE);
         multTypesToCalculate.add(MatrixMultType.PARALLEL_NAIVE);
-        multTypesToCalculate.add(MatrixMultType.WINOGRAD);
+        // multTypesToCalculate.add(MatrixMultType.WINOGRAD);
         multTypesToCalculate.add(MatrixMultType.STRASSEN_NAIVE_HYBRID);
         multTypesToCalculate.add(MatrixMultType.PARALLEL_STRASSEN_NAIVE_HYBRID);
-        matrixStorageTypesToCalculate.add(0); // MAP
+        // matrixStorageTypesToCalculate.add(0); // MAP
         matrixStorageTypesToCalculate.add(1); // ARRAY
         matrixStorageTypesToCalculate.add(2); // RCS
     }
@@ -245,14 +244,15 @@ public class MultTest {
 
     private static void printExperimentParameters(int runs, int randomNumbers1,
             int randomNumbers2, int rows1, int cols1, int rows2, int cols2,
-            double rowSum, long seed) {
+            double rowSum, long seed1, long seed2) {
         System.out.println("LEFT MATRIX SIZE:\t " + rows1 + " * " + cols1);
         System.out.println("LEFT RANDOM ENTRIES:\t " + randomNumbers1 + "\n");
         System.out.println("RIGHT MATRIX SIZE:\t " + rows2 + " * " + cols2);
         System.out.println("RIGHT RANDOM ENTRIES:\t " + randomNumbers2 + "\n");
         System.out.println("CALCULATION REPETITIONS: " + runs + "\n");
         System.out.println("ROW SUM:\t\t " + rowSum + "\n");
-        System.out.println("RANDOM NUMBER SEED:\t " + seed + "\n");
+        System.out.println("FIRST RANDOM NUMBER SEED:\t " + seed1 + "\n");
+        System.out.println("SECOND RANDOM NUMBER SEED:\t " + seed2 + "\n");
     }
 
     private static void printDifferences(Map<MatrixMultType, Matrix> results,
@@ -282,7 +282,9 @@ public class MultTest {
     }
 
     public static void fillMatrices(int randomNumbers, MapMatrix mapMat,
-            ArrayMatrix arrMat, CrsMatrix sprMat, double rowSum) {
+            ArrayMatrix arrMat, CrsMatrix sprMat, double rowSum, long seed) {
+
+        Random random = new Random(seed);
 
         Matrix mat;
         for (int i = 0; i < 3; ++i) {
