@@ -51,23 +51,23 @@ public class MultTest {
         boolean mode = true;
         boolean useLogPower = true;
 
-        boolean printResultMatrix = false;
+        boolean printResultMatrix = true;
         boolean printDifferences = false;
         boolean checkConvergence = false;
         int checkConvergenceMatrixType = 1; // ARRAY, see matrixStorageTypes
 
         // use non-positive numbers for access to matrices[][][]
-        int randomNumbers1 = 4000;
-        int randomNumbers2 = 4000;
+        int randomNumbers1 = 0;
+        int randomNumbers2 = 0;
 
         int runs = 1;
-        int exponent = 256;
+        int exponent = 32;
 
         // set up the dimensions of the matrices
-        int rows1 = 200;
-        int cols1 = 200;
+        int rows1 = 4;
+        int cols1 = 4;
         int rows2 = cols1;
-        int cols2 = 200;
+        int cols2 = 4;
         int initialCrsMatrixSize = 10;
 
         // set up conditions for stochastic matrices
@@ -223,13 +223,13 @@ public class MultTest {
             List<MatrixMultType> multTypesToCalculate,
             Set<Integer> matrixStorageTypesToCalculate) {
         multTypesToCalculate.add(MatrixMultType.NAIVE);
-        multTypesToCalculate.add(MatrixMultType.PARALLEL_NAIVE);
+        // multTypesToCalculate.add(MatrixMultType.PARALLEL_NAIVE);
         // multTypesToCalculate.add(MatrixMultType.WINOGRAD);
-        multTypesToCalculate.add(MatrixMultType.STRASSEN_NAIVE_HYBRID);
-        multTypesToCalculate.add(MatrixMultType.PARALLEL_STRASSEN_NAIVE_HYBRID);
+        // multTypesToCalculate.add(MatrixMultType.STRASSEN_NAIVE_HYBRID);
+        // multTypesToCalculate.add(MatrixMultType.PARALLEL_STRASSEN_NAIVE_HYBRID);
         // matrixStorageTypesToCalculate.add(0); // MAP
         matrixStorageTypesToCalculate.add(1); // ARRAY
-        matrixStorageTypesToCalculate.add(2); // RCS
+        // matrixStorageTypesToCalculate.add(2); // CRS
     }
 
     private static Map<Integer, String> setUpStringMaps() {
@@ -237,7 +237,7 @@ public class MultTest {
 
         matrixStorageTypeIds.put(0, "MAP");
         matrixStorageTypeIds.put(1, "ARRAY");
-        matrixStorageTypeIds.put(2, "RCS");
+        matrixStorageTypeIds.put(2, "CRS");
 
         return matrixStorageTypeIds;
     }
