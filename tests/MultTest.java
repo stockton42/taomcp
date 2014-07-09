@@ -32,8 +32,12 @@ public class MultTest {
         return Math.pow(2, -exponent);
     }
 
-    private static final double[][][] matrices = { { { 0, 0, 0.5, 0.5 },
-            { 1.0, 0, 0, 0 }, { 0.333, 0.333, 0.333, 0 }, { 0, 0, 1.0, 0 } } };
+    private static final double[][][] matrices = {
+            { { 0, 0, 0.5, 0.5 }, { 1.0, 0, 0, 0 },
+                    { 1.0 / 3, 1.0 / 3, 1.0 / 3, 0 }, { 0, 0, 1.0, 0 } },
+            { { 0.5, 0.5, 0 }, { 0, 0, 1 }, { 0.5, 0.5, 0 } },
+            { { 0, 1, 0 }, { 0, 0.5, 0.5 }, { 0.5, 0, 0.5 } },
+            { { 0, 0.5, 0.5 }, { 0.5, 0, 0.5 }, { 1, 0, 0 } } };
 
     public static void main(String[] args) {
         System.out.println("MACHINE EPSILON:\t " + MACHINE_EPSILON);
@@ -61,7 +65,7 @@ public class MultTest {
         int randomNumbers2 = 0;
 
         int runs = 1;
-        int exponent = 32;
+        int exponent = 64;
 
         // set up the dimensions of the matrices
         int rows1 = 4;
@@ -71,7 +75,7 @@ public class MultTest {
         int initialCrsMatrixSize = 10;
 
         // set up conditions for stochastic matrices
-        double rowSum = 1.0;
+        double rowSum = 0.0;
         boolean setNegativeEntriesToZero = true;
 
         // set random number parameters
@@ -121,6 +125,17 @@ public class MultTest {
                         if (useLogPower) {
                             result = MatrixPowerer.logPower(mat1, multType,
                                     exponent, rowSum, setNegativeEntriesToZero);
+
+                            // for (int i = 0; i < exponent; ++i) {
+                            // System.out.println(i + ":");
+                            // System.out.println(mat1 + "\n");
+                            // mat1 = mat1.multWith(mat1.clone(), multType);
+                            // if (rowSum != NO_STABILIZE)
+                            // mat1.stabilizeRowsTo(rowSum);
+                            // }
+                            // System.out.println(exponent + ":");
+                            // System.out.println(mat1 + "\n");
+                            // result = mat1;
                         } else {
                             result = MatrixPowerer.stdPower(mat1, multType,
                                     exponent, rowSum, setNegativeEntriesToZero);
