@@ -21,11 +21,11 @@ public class MatrixPowerer {
 
         for (int i = 0; i < 17; ++i) {
             System.out.println("EXPONENT = " + i);
-            Matrix powered = stdPower(test, MatrixMultType.NAIVE, i, 1, true);
+            Matrix powered = stdPower(test, MatrixMultType.NAIVE, i, 1.0, true);
             System.out.println(powered);
 
             System.out.println("LOG_POWER");
-            Matrix fastPwd = logPower(test, MatrixMultType.NAIVE, i, 1, true);
+            Matrix fastPwd = logPower(test, MatrixMultType.NAIVE, i, 1.0, true);
             System.out.println(fastPwd + "\n");
         }
     }
@@ -102,6 +102,7 @@ public class MatrixPowerer {
 
         for (int i = 1; i <= maxPower; ++i) {
             temp = temp.multWith(temp, matMultType);
+
             if (setNegativeEntriesToZero)
                 temp.setNegativeEntriesToZero();
             if (stabilizeRowsTo != NO_STABILIZE)

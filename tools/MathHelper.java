@@ -6,7 +6,7 @@ import java.util.List;
 public class MathHelper {
 
     public static void main(String[] args) {
-        System.out.println(twoPowersNeededFor(12));
+        System.out.println(twoPowersNeededFor(65536));
 
         System.out.println(twoPowersNeededFor(1023));
 

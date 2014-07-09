@@ -126,6 +126,15 @@ public class CrsMatrix extends Matrix {
 
         System.out.println(crs);
         crs.printStatus();
+
+        ArrayMatrix arrMat = new ArrayMatrix(new double[][] {
+                { 0, 0, 0.5, 0.5 }, { 1.0, 0, 0, 0 },
+                { 1.0 / 3, 1.0 / 3, 1.0 / 3, 0 }, { 0, 0, 1.0, 0 } }, false);
+
+        crs = new CrsMatrix(arrMat);
+
+        System.out.println(crs);
+        crs.printStatus();
     }
 
     public static void accessTest() {
@@ -370,9 +379,9 @@ public class CrsMatrix extends Matrix {
         System.out.println("---STATUS---");
         System.out.println("LENGTH:\t\t " + nextValIndex);
         System.out.println("RESERVED SPACE:\t " + val.length);
-        System.out.println("COL_PTR:\t " + ArrayHelper.toString(row_ptr));
-        System.out.println("ROW_IDX:\t " + ArrayHelper.toString(col_idx));
-        System.out.println("VALS:\t\t " + ArrayHelper.toString(this.val));
+        System.out.println("ROW_PTR:\t " + ArrayHelper.toString(row_ptr));
+        System.out.println("COL_IDX:\t " + ArrayHelper.toString(col_idx));
+        System.out.println("VALS:\t\t " + ArrayHelper.toString(val));
     }
 
     @Override
