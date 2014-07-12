@@ -20,9 +20,9 @@ public class Demo {
         b = new double[][] { { 0, 1 }, { 2, 0 } };
 
         printArray(a);
-        System.out.println();
+        System.out.println("*");
         printArray(b);
-        System.out.println();
+        System.out.println("=");
 
         matrixMult(a, b, c);
 
